@@ -113,6 +113,7 @@
     const key=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
     if (apps.some(a=>a.key===key)) continue;
     const pkg={windows};
+    if(name==='Mullvad VPN'){pkg.linux='url:https://mullvad.net/en/download/vpn/linux';pkg.mac={type:'url',id:'https://mullvad.net/en/download/vpn/macos'};}
     if(name==='Wireshark'){pkg.linux='url:https://www.wireshark.org/download.html';pkg.mac={type:'cask',id:'wireshark'};}
     if(name==='Zen Browser'){pkg.linux='app.zen_browser.zen';pkg.mac={type:'cask',id:'zen'};}
     if(name==='Proton VPN'){pkg.linux='url:https://protonvpn.com/support/official-linux-vpn';pkg.mac={type:'url',id:'https://protonvpn.com/download-macos'};}
