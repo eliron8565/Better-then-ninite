@@ -113,6 +113,8 @@
     const key=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
     if (apps.some(a=>a.key===key)) continue;
     const pkg={windows};
+    if(name==='Tor Browser'){pkg.linux='url:https://www.torproject.org/download/';pkg.mac={type:'url',id:'https://www.torproject.org/download/'};}
+    if(name==='Waterfox'){pkg.linux='url:https://www.waterfox.net/download/';pkg.mac={type:'url',id:'https://www.waterfox.net/download/'};}
     if(name==='Mullvad VPN'){pkg.linux='url:https://mullvad.net/en/download/vpn/linux';pkg.mac={type:'url',id:'https://mullvad.net/en/download/vpn/macos'};}
     if(name==='Wireshark'){pkg.linux='url:https://www.wireshark.org/download.html';pkg.mac={type:'cask',id:'wireshark'};}
     if(name==='Zen Browser'){pkg.linux='app.zen_browser.zen';pkg.mac={type:'cask',id:'zen'};}
