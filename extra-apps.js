@@ -104,7 +104,8 @@
     ['RetroArch','Gaming','retroarch.com',9,'Libretro.RetroArch',139,['gaming','free']],
     ['EarTrumpet','Utilities','eartrumpet.app',9,'File-New-Project.EarTrumpet',140,['essentials','free']],
     ['SoundSwitch','Utilities','soundswitch.aaflalo.me',9,'AntoineAflalo.SoundSwitch',141,['essentials','free']],
-    ['FilmCraft','Media','getartcraft.com',8,'url:https://getartcraft.com/apps/filmcraft',142,['creator','free']]
+    ['FilmCraft','Media','getartcraft.com',8,'url:https://getartcraft.com/apps/filmcraft',142,['creator','free']],
+    ['XAMPP','Development','apachefriends.org',9,'url:https://www.apachefriends.org/download.html',143,['developer','student','free']]
   ];
 
   for (const [name,category,domain,popular,windows,winIndex,tags] of extras) {
@@ -114,6 +115,7 @@
     if(name==='Wireshark'){pkg.linux='url:https://www.wireshark.org/download.html';pkg.mac={type:'cask',id:'wireshark'};}
     if(name==='Zen Browser'){pkg.linux='app.zen_browser.zen';pkg.mac={type:'cask',id:'zen'};}
     if(name==='Proton VPN'){pkg.linux='url:https://protonvpn.com/support/official-linux-vpn';pkg.mac={type:'url',id:'https://protonvpn.com/download-macos'};}
+    if(name==='XAMPP'){pkg.linux='url:https://www.apachefriends.org/download.html';pkg.mac={type:'url',id:'https://www.apachefriends.org/download.html'};}
     if(name==='FilmCraft'){pkg.linux='url:https://getartcraft.com/apps/filmcraft';pkg.mac={type:'url',id:'https://getartcraft.com/apps/filmcraft'};}
     if(name==='Floorp'){pkg.linux='one.ablaze.floorp';pkg.mac={type:'cask',id:'floorp'};}
     if(name==='MCreator'){pkg.linux='url:https://mcreator.net/download';pkg.mac={type:'url',id:'https://mcreator.net/download'};}
