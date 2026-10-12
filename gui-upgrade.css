@@ -530,3 +530,42 @@ body.cod .theme-scene-label{font-family:monospace;text-transform:uppercase;lette
 @keyframes sceneBeacon{50%{opacity:.25;box-shadow:0 0 2px currentColor}}
 @media(max-width:760px){.theme-status{display:none}.theme-scene-label{font-size:20px}body:is(.cyberpunk,.gta,.minecraft,.league,.apex,.siege,.cod) .hero{min-height:0;padding:18px 6px}body.siege .hero:before,body.cod .hero:before{opacity:.25}}
 @media(prefers-reduced-motion:reduce){.theme-scene-eyebrow:before{animation:none}}
+
+
+/* AppForge immersive dashboard — unique scene components, live selection progress */
+body{--scene-accent:#69e2ff}
+.hero-copy{position:relative}
+.theme-dashboard{margin-top:25px;max-width:430px;padding:19px 21px;border:1px solid color-mix(in srgb,var(--scene-accent) 65%,transparent);border-radius:18px;background:linear-gradient(135deg,color-mix(in srgb,var(--scene-accent) 14%,#091321),rgba(6,12,23,.96));box-shadow:0 16px 50px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.07);color:#f3f7ff;backdrop-filter:blur(15px);transition:transform .25s,border-color .25s}
+.theme-dashboard:hover{transform:translateY(-4px);border-color:var(--scene-accent)}
+.theme-dashboard-head{display:flex;align-items:center;gap:14px}
+.theme-dashboard-icon{display:grid;place-items:center;width:54px;height:54px;flex-shrink:0;border:1px solid var(--scene-accent);border-radius:13px;background:color-mix(in srgb,var(--scene-accent) 16%,#0a111d);color:var(--scene-accent);font-size:29px;text-shadow:0 0 20px currentColor}
+.theme-dashboard-title{display:block;color:var(--scene-accent);font:900 16px Inter,sans-serif;letter-spacing:.09em}
+.theme-dashboard-meter-label{display:block;margin-top:5px;color:#b8c6d5;font:700 10px Inter,sans-serif;letter-spacing:.08em}
+.theme-dashboard-progress{height:9px;border-radius:20px;margin:21px 0 11px;background:rgba(255,255,255,.1);overflow:hidden}
+.theme-dashboard-progress span{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--scene-accent),#fff);box-shadow:0 0 18px var(--scene-accent);transition:width .4s}
+.theme-dashboard-stats{display:flex;justify-content:space-between;gap:12px;font:800 10px Inter,sans-serif;color:#b8c6d5;letter-spacing:.08em}
+.theme-dashboard-action{display:block;width:100%;margin-top:17px;padding:13px 16px;border:1px solid var(--scene-accent);border-radius:10px;background:var(--scene-accent);color:#07121a;font:900 12px Inter,sans-serif;letter-spacing:.08em;cursor:pointer;transition:transform .18s,filter .18s,box-shadow .18s}
+.theme-dashboard-action:hover{transform:translateY(-2px);filter:brightness(1.12);box-shadow:0 0 26px color-mix(in srgb,var(--scene-accent) 40%,transparent)}
+body.cyberpunk .theme-dashboard{border-radius:0;clip-path:polygon(0 0,96% 0,100% 16px,100% 100%,16px 100%,0 calc(100% - 16px));background:linear-gradient(125deg,#251127,#0a0d13);box-shadow:8px 8px 0 #ff2a9d}
+body.cyberpunk .theme-dashboard-icon,body.cyberpunk .theme-dashboard-action{border-radius:0}
+body.gta .theme-dashboard{border-radius:28px;background:linear-gradient(135deg,#613050,#231a40);box-shadow:0 20px 55px rgba(255,95,155,.22)}
+body.gta .theme-dashboard-icon{border-radius:50%}
+body.gta .theme-dashboard-action{border-radius:25px}
+body.minecraft .theme-dashboard,body.minecraft .theme-dashboard-icon,body.minecraft .theme-dashboard-action{border-radius:0}
+body.minecraft .theme-dashboard{border:3px solid #8ce776;box-shadow:8px 8px 0 #162b12;background:#263c22}
+body.minecraft .theme-dashboard-progress,body.minecraft .theme-dashboard-progress span{border-radius:0}
+body.minecraft .theme-dashboard-action{box-shadow:inset -4px -4px 0 #4c813d}
+body.league .theme-dashboard{border-radius:8px 35px 8px 35px;border:2px solid #e4bd69;background:linear-gradient(145deg,#152d3a,#07151e)}
+body.league .theme-dashboard-title{font-family:Georgia,serif;letter-spacing:.12em}
+body.league .theme-dashboard-icon{border-radius:50%;border:2px solid #e4bd69}
+body.apex .theme-dashboard{border-radius:0;clip-path:polygon(0 0,calc(100% - 20px) 0,100% 20px,100% 100%,0 100%);border-left:5px solid #ff544b;background:#2a1518}
+body.apex .theme-dashboard-action{border-radius:0;transform:skewX(-5deg)}
+body.siege .theme-dashboard{border-radius:3px;border:2px solid #ffc845;background:repeating-linear-gradient(90deg,transparent 0 36px,rgba(255,200,69,.025) 36px 37px),#101e27}
+body.siege .theme-dashboard-icon{border-radius:3px}
+body.siege .theme-dashboard-action{border-radius:2px}
+body.cod .theme-dashboard{border-radius:0;border:2px solid #a5d96a;background:repeating-linear-gradient(0deg,transparent 0 29px,rgba(165,217,106,.035) 29px 30px),#18231b}
+body.cod .theme-dashboard-icon,body.cod .theme-dashboard-action{border-radius:0}
+body.cod .theme-dashboard-title{font-family:monospace}
+@media(min-width:1100px){body:is(.cyberpunk,.gta,.minecraft,.league,.apex,.siege,.cod) .hero-copy{max-width:none}body:is(.cyberpunk,.gta,.minecraft,.league,.apex,.siege,.cod) .theme-dashboard{max-width:440px}}
+@media(max-width:760px){.theme-dashboard{padding:14px;max-width:100%}.theme-dashboard-icon{width:44px;height:44px}.theme-dashboard-title{font-size:13px}}
+@media(prefers-reduced-motion:reduce){.theme-dashboard,.theme-dashboard-action,.theme-dashboard-progress span{transition:none}}
