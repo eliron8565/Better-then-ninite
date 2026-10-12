@@ -403,3 +403,74 @@ body.cyberpunk .app-group:before{background:linear-gradient(90deg,#f7ef38,#00f0f
 @media(prefers-reduced-motion:reduce){
  body:is(.cyberpunk,.gta,.minecraft,.league,.apex) .app-group{transition:none}
 }
+
+
+/* Theme overhaul v2: large visual changes visible without hovering. */
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex){
+ --scene-main:var(--forge-cyan);--scene-secondary:var(--forge-violet);
+ --scene-glow:color-mix(in srgb,var(--scene-main) 38%,transparent);
+ background-color:var(--bg)!important;
+}
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex) .hero{
+ position:relative;overflow:hidden;border-radius:26px;
+ min-height:340px;padding:42px 30px;
+ border:2px solid var(--scene-main);
+ background:
+ radial-gradient(ellipse at 75% 25%,var(--scene-glow),transparent 48%),
+ linear-gradient(125deg,color-mix(in srgb,var(--scene-main) 13%,#070b14),#070b14 68%)!important;
+ box-shadow:0 0 0 5px color-mix(in srgb,var(--scene-main) 8%,transparent),0 28px 90px rgba(0,0,0,.48),0 0 90px color-mix(in srgb,var(--scene-main) 14%,transparent);
+}
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex) .hero:before{
+ content:"";position:absolute;inset:-35% -20% auto auto;width:65%;height:180%;border-radius:0;
+ background:repeating-linear-gradient(125deg,transparent 0 24px,color-mix(in srgb,var(--scene-main) 13%,transparent) 25px 27px,transparent 28px 60px);
+ filter:none;transform:rotate(-8deg);opacity:.65;animation:themeScan 16s linear infinite;
+}
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex) .hero:after{border:0;background:none}
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex) .hero-copy h1{font-size:clamp(42px,5.2vw,82px);text-transform:uppercase;letter-spacing:-.055em;line-height:1.04}
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex) .hero-copy h1 em{font-weight:900}
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex) .how-card{
+ border:2px solid var(--scene-main);background:color-mix(in srgb,var(--scene-main) 12%,#0a101d)!important;
+ box-shadow:12px 12px 0 color-mix(in srgb,var(--scene-main) 24%,transparent),0 18px 60px rgba(0,0,0,.38);
+}
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex) .workspace-top{
+ border:2px solid var(--scene-main);
+ background:color-mix(in srgb,var(--scene-main) 13%,#080d18)!important;
+ box-shadow:0 16px 48px rgba(0,0,0,.4);
+}
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex) .app-group{
+ border:2px solid color-mix(in srgb,var(--scene-main) 60%,transparent);
+ background:linear-gradient(160deg,color-mix(in srgb,var(--scene-main) 13%,#080c15),#090d18)!important;
+ box-shadow:0 14px 40px rgba(0,0,0,.38),inset 0 1px 0 color-mix(in srgb,var(--scene-main) 25%,transparent);
+}
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex) .app-group h2{font-size:19px;color:var(--scene-main);text-transform:uppercase;letter-spacing:.06em}
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex) .page-title-row h1{color:var(--scene-main);font-size:clamp(29px,3vw,43px)}
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex) .category-link.active,
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex) .platform-btn.active{
+ background:var(--scene-main)!important;color:#080b12!important;
+ box-shadow:0 6px 28px var(--scene-glow);
+}
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex) .selection-bar{
+ border:2px solid var(--scene-main);
+ background:color-mix(in srgb,var(--scene-main) 16%,#090d18)!important;
+}
+body.cyberpunk{--scene-main:#f8f33c;--scene-secondary:#ff32ae}
+body.cyberpunk .hero{border-radius:0;clip-path:polygon(0 0,97% 0,100% 26px,100% 100%,26px 100%,0 calc(100% - 26px))}
+body.cyberpunk .hero-copy h1{font-style:italic}
+body.gta{--scene-main:#ff7ca6;--scene-secondary:#ffcb65}
+body.gta .hero{border-radius:32px;background:radial-gradient(circle at 80% 20%,rgba(255,193,97,.38),transparent 35%),linear-gradient(120deg,#372146,#10162c 80%)!important}
+body.gta .hero-copy h1{text-transform:none;font-style:italic}
+body.minecraft{--scene-main:#88e367;--scene-secondary:#b78a54}
+body.minecraft .hero,body.minecraft .how-card,body.minecraft .app-group,body.minecraft .workspace-top{border-radius:2px}
+body.minecraft .hero{background:repeating-linear-gradient(0deg,rgba(28,75,26,.15) 0 32px,transparent 32px 64px),repeating-linear-gradient(90deg,rgba(35,83,31,.2) 0 32px,transparent 32px 64px),linear-gradient(130deg,#243f22,#0b180e)!important}
+body.minecraft .hero-copy h1{font-family:monospace;letter-spacing:-.07em;text-shadow:4px 4px 0 #143010}
+body.minecraft .how-card{box-shadow:9px 9px 0 #31542b}
+body.league{--scene-main:#e4bd69;--scene-secondary:#15c9c5}
+body.league .hero{border-radius:12px 52px 12px 52px;background:radial-gradient(ellipse at 80% 10%,rgba(17,173,168,.23),transparent 50%),linear-gradient(140deg,#122b3a,#060f1a)!important}
+body.league .hero-copy h1{font-family:Georgia,serif;letter-spacing:-.025em}
+body.league .how-card{border-radius:6px 26px 6px 26px}
+body.apex{--scene-main:#ff544b;--scene-secondary:#f7e2ce}
+body.apex .hero{border-radius:0;clip-path:polygon(0 0,97% 0,100% 22px,100% 100%,22px 100%,0 calc(100% - 22px));background:repeating-linear-gradient(130deg,rgba(255,70,60,.09) 0 3px,transparent 3px 48px),linear-gradient(120deg,#2c1010,#090b0e)!important}
+body.apex .hero-copy h1{font-style:italic;letter-spacing:-.07em}
+@keyframes themeScan{50%{transform:rotate(-5deg) translateX(-20px)}}
+@media(max-width:760px){body:is(.cyberpunk,.gta,.minecraft,.league,.apex) .hero{padding:14px 6px;min-height:0;border-width:1px}body:is(.cyberpunk,.gta,.minecraft,.league,.apex) .hero-copy h1{font-size:clamp(32px,9vw,52px)}body:is(.cyberpunk,.gta,.minecraft,.league,.apex) .how-card{box-shadow:none}}
+@media(prefers-reduced-motion:reduce){body:is(.cyberpunk,.gta,.minecraft,.league,.apex) .hero:before{animation:none}}
