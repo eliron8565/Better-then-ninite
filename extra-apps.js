@@ -128,6 +128,7 @@
   // Linux-only native package; do not assign a Windows installer index.
   if(!apps.some(a=>a.key==='wine')) apps.push({name:'Wine',key:'wine',category:'Utilities',domain:'winehq.org',popular:9,tags:['linux','gaming','developer','free'],pkg:{linux:'native:wine'},logo:fav('winehq.org'),desc:'Run compatible Windows applications on Linux using Wine.'});
 
+  if(!apps.some(a=>a.key==='brave-origin')) apps.push({name:'Brave Origin',key:'brave-origin',category:'Privacy Browsers',domain:'brave.com',popular:9,tags:['privacy','linux','free'],pkg:{linux:'url:https://brave.com/origin/linux/'},logo:fav('brave.com'),desc:'Brave Origin for Linux, separate from standard Brave.'});
   const browserGroups = {
     'Google Chrome':'Popular Browsers','Mozilla Firefox':'Popular Browsers','Microsoft Edge':'Popular Browsers',
     'Brave':'AI Browsers','Opera':'AI Browsers','Vivaldi':'Popular Browsers'
