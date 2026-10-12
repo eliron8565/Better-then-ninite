@@ -103,13 +103,15 @@
     ['Moonlight','Gaming','moonlight-stream.org',9,'MoonlightGameStreamingProject.Moonlight',138,['gaming','free']],
     ['RetroArch','Gaming','retroarch.com',9,'Libretro.RetroArch',139,['gaming','free']],
     ['EarTrumpet','Utilities','eartrumpet.app',9,'File-New-Project.EarTrumpet',140,['essentials','free']],
-    ['SoundSwitch','Utilities','soundswitch.aaflalo.me',9,'AntoineAflalo.SoundSwitch',141,['essentials','free']]
+    ['SoundSwitch','Utilities','soundswitch.aaflalo.me',9,'AntoineAflalo.SoundSwitch',141,['essentials','free']],
+    ['FilmCraft','Media','getartcraft.com',8,'url:https://getartcraft.com/apps/filmcraft',142,['creator','free']]
   ];
 
   for (const [name,category,domain,popular,windows,winIndex,tags] of extras) {
     const key=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
     if (apps.some(a=>a.key===key)) continue;
     const pkg={windows};
+    if(name==='FilmCraft'){pkg.linux='url:https://getartcraft.com/apps/filmcraft';pkg.mac={type:'url',id:'https://getartcraft.com/apps/filmcraft'};}
     if(name==='Floorp'){pkg.linux='one.ablaze.floorp';pkg.mac={type:'cask',id:'floorp'};}
     if(name==='MCreator'){pkg.linux='url:https://mcreator.net/download';pkg.mac={type:'url',id:'https://mcreator.net/download'};}
     if(name==='Modrinth App'){pkg.linux='com.modrinth.ModrinthApp';pkg.mac={type:'cask',id:'modrinth-app'};}
