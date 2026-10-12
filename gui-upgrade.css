@@ -474,3 +474,59 @@ body.apex .hero-copy h1{font-style:italic;letter-spacing:-.07em}
 @keyframes themeScan{50%{transform:rotate(-5deg) translateX(-20px)}}
 @media(max-width:760px){body:is(.cyberpunk,.gta,.minecraft,.league,.apex) .hero{padding:14px 6px;min-height:0;border-width:1px}body:is(.cyberpunk,.gta,.minecraft,.league,.apex) .hero-copy h1{font-size:clamp(32px,9vw,52px)}body:is(.cyberpunk,.gta,.minecraft,.league,.apex) .how-card{box-shadow:none}}
 @media(prefers-reduced-motion:reduce){body:is(.cyberpunk,.gta,.minecraft,.league,.apex) .hero:before{animation:none}}
+
+
+/* IMMERSIVE THEMES V3: unique scenes, materials, panels and interaction */
+body{--scene-accent:#69e2ff;--scene-ink:#081221}
+.theme-scene-eyebrow{display:inline-flex;align-items:center;gap:9px;padding:8px 12px;border:1px solid var(--scene-accent);color:var(--scene-accent);font:800 10px Inter,sans-serif;letter-spacing:.16em;text-transform:uppercase;background:rgba(0,0,0,.32);border-radius:5px;margin-bottom:15px;box-shadow:0 0 18px color-mix(in srgb,var(--scene-accent) 18%,transparent)}
+.theme-scene-eyebrow:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor;animation:sceneBeacon 2.5s ease-in-out infinite}
+.theme-scene-label{font-size:clamp(19px,2.4vw,31px);font-weight:900;color:var(--scene-accent);letter-spacing:-.025em;margin:16px 0 4px}
+.theme-scene-sub{font-size:13px;color:var(--text,#dae5f2);opacity:.75;margin-bottom:17px}
+.theme-status{position:fixed;bottom:13px;right:16px;z-index:25;pointer-events:none;padding:8px 13px;font:800 9px Inter,sans-serif;letter-spacing:.12em;color:var(--scene-accent);background:rgba(5,11,19,.88);border:1px solid var(--scene-accent);border-radius:5px;box-shadow:0 0 24px color-mix(in srgb,var(--scene-accent) 12%,transparent)}
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex,.siege,.cod){--scene-accent:var(--scene-main);--theme-material:rgba(11,17,29,.91)}
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex,.siege,.cod) .hero{min-height:385px;isolation:isolate}
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex,.siege,.cod) .hero:after{content:"";position:absolute;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(circle at var(--mx,80%) var(--my,25%),color-mix(in srgb,var(--scene-accent) 17%,transparent),transparent 32%);border:0}
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex,.siege,.cod) .hero-copy{max-width:900px}
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex,.siege,.cod) .app-group{backdrop-filter:blur(8px);transition:transform .25s,border-color .25s,box-shadow .25s}
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex,.siege,.cod) .app-group:hover{transform:translateY(-5px);border-color:var(--scene-accent);box-shadow:0 20px 65px rgba(0,0,0,.4),0 0 28px color-mix(in srgb,var(--scene-accent) 20%,transparent)}
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex,.siege,.cod) .app-row.selected{background:color-mix(in srgb,var(--scene-accent) 17%,transparent);box-shadow:inset 3px 0 0 var(--scene-accent)}
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex,.siege,.cod) .primary-btn{font-weight:900;letter-spacing:.03em}
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex,.siege,.cod) .category-link.active{color:#0b1018!important}
+body:is(.cyberpunk,.gta,.minecraft,.league,.apex,.siege,.cod) .theme-picker-wrap{border-color:var(--scene-accent)}
+body.cyberpunk .theme-scene-eyebrow{transform:skewX(-9deg)}
+body.cyberpunk .theme-scene-label{font-family:monospace;text-transform:uppercase;text-shadow:3px 3px 0 #ff2a9d}
+body.cyberpunk .hero{background:repeating-linear-gradient(95deg,rgba(0,240,255,.035) 0 2px,transparent 2px 80px),radial-gradient(circle at 80% 20%,rgba(255,42,157,.3),transparent 40%),linear-gradient(135deg,#1c1025,#050b10)!important}
+body.gta .theme-scene-label{font-style:italic;font-family:Georgia,serif;text-shadow:2px 3px 0 rgba(15,10,35,.6)}
+body.gta .hero{background:radial-gradient(ellipse at 78% 18%,rgba(255,205,98,.5),transparent 25%),linear-gradient(165deg,#71344d,#35235a 50%,#121d31)!important}
+body.gta .app-group{border-radius:20px;background:linear-gradient(160deg,#30213e,#151728)!important}
+body.minecraft .theme-scene-eyebrow,body.minecraft .theme-scene-label{font-family:monospace;letter-spacing:0}
+body.minecraft .theme-scene-label{text-shadow:3px 3px #152f12}
+body.minecraft .hero{background:linear-gradient(0deg,rgba(15,33,13,.7),transparent),repeating-linear-gradient(90deg,rgba(112,165,67,.09) 0 32px,transparent 32px 64px),linear-gradient(145deg,#35512a,#142a17)!important}
+body.minecraft .app-group{border-radius:0;box-shadow:6px 6px 0 #152e15!important}
+body.league .theme-scene-label{font-family:Georgia,serif;letter-spacing:.02em;text-transform:uppercase}
+body.league .hero{background:radial-gradient(ellipse at 80% 15%,rgba(209,172,78,.22),transparent 45%),repeating-linear-gradient(120deg,transparent 0 110px,rgba(223,187,101,.035) 110px 112px),linear-gradient(135deg,#0a2532,#070d1a)!important}
+body.league .app-group{border-radius:3px 26px 3px 26px}
+body.apex .theme-scene-label{text-transform:uppercase;font-style:italic;transform:skewX(-4deg)}
+body.apex .hero{background:repeating-linear-gradient(115deg,transparent 0 80px,rgba(255,78,68,.09) 80px 94px),linear-gradient(135deg,#341213,#0b0d11)!important}
+body.apex .app-group{border-radius:0;clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%)}
+body.siege{--scene-main:#ffc845;--forge-cyan:#ffc845;--forge-blue:#cf8c19;--forge-violet:#a9b5bd;--bg:#0a1117;--panel:#111e27;--panel2:#1a2c36;--text:#f3f7f8;--muted:#9cabb7;--line:#3d5462;background:linear-gradient(135deg,#07121b,#101d26 65%,#0a1117)!important;color:#f3f7f8}
+body.siege .hero{border-radius:4px;border:2px solid #ffc845;background:repeating-linear-gradient(90deg,transparent 0 78px,rgba(255,200,69,.035) 78px 80px),radial-gradient(ellipse at 85% 12%,rgba(255,200,69,.21),transparent 42%),linear-gradient(125deg,#172f3b,#071019)!important;box-shadow:0 20px 70px rgba(0,0,0,.48)}
+body.siege .hero:before{content:"";position:absolute;inset:0 0 0 auto;width:43%;height:100%;border-radius:0;filter:none;background:repeating-linear-gradient(45deg,transparent 0 15px,rgba(255,200,69,.06) 15px 17px);animation:none;opacity:1}
+body.siege .hero-copy h1{text-transform:uppercase;font-size:clamp(40px,5vw,76px)}
+body.siege .hero-copy h1 em{background:linear-gradient(90deg,#ffc845,#f5f0da);-webkit-background-clip:text;background-clip:text;color:transparent}
+body.siege .how-card,body.siege .workspace-top,body.siege .app-group,body.siege .dialog-card{background:#10202a!important;border:1px solid rgba(255,200,69,.5);border-radius:4px}
+body.siege .app-group h2{color:#ffc845}
+body.siege .primary-btn,body.siege .category-link.active,body.siege .platform-btn.active{background:#ffc845!important;color:#111a21!important;border-radius:2px;box-shadow:0 5px 0 #9d6c19}
+body.siege .theme-scene-label{font-family:monospace;text-transform:uppercase;letter-spacing:.08em}
+body.cod{--scene-main:#a5d96a;--forge-cyan:#a5d96a;--forge-blue:#6b8b47;--forge-violet:#9aa38b;--bg:#0b100d;--panel:#172019;--panel2:#222c23;--text:#edf1e7;--muted:#a7b3a4;--line:#425043;background:radial-gradient(ellipse at 85% 8%,rgba(144,174,99,.12),transparent 45%),#0b100d!important;color:#edf1e7}
+body.cod .hero{border-radius:0;border:2px solid #a5d96a;background:repeating-linear-gradient(0deg,rgba(165,217,106,.035) 0 2px,transparent 2px 32px),linear-gradient(125deg,#28352a,#0b100d 70%)!important;box-shadow:0 0 0 8px rgba(165,217,106,.07),0 30px 80px rgba(0,0,0,.55)}
+body.cod .hero:before{content:"";position:absolute;right:-5%;top:0;width:40%;height:100%;border-radius:0;background:repeating-linear-gradient(135deg,rgba(165,217,106,.11) 0 3px,transparent 3px 34px);filter:none;animation:none}
+body.cod .hero-copy h1{font-family:Impact,Arial Black,sans-serif;text-transform:uppercase;letter-spacing:.01em}
+body.cod .hero-copy h1 em{background:linear-gradient(90deg,#e6f3c9,#a5d96a);-webkit-background-clip:text;background-clip:text;color:transparent}
+body.cod .how-card,body.cod .workspace-top,body.cod .app-group,body.cod .dialog-card{background:#151e17!important;border:1px solid #526c42;border-radius:0}
+body.cod .app-group h2{color:#a5d96a;text-transform:uppercase;letter-spacing:.1em}
+body.cod .primary-btn,body.cod .category-link.active,body.cod .platform-btn.active{background:#a5d96a!important;color:#10190d!important;border-radius:0;text-transform:uppercase;font-weight:900}
+body.cod .theme-scene-label{font-family:monospace;text-transform:uppercase;letter-spacing:.12em}
+@keyframes sceneBeacon{50%{opacity:.25;box-shadow:0 0 2px currentColor}}
+@media(max-width:760px){.theme-status{display:none}.theme-scene-label{font-size:20px}body:is(.cyberpunk,.gta,.minecraft,.league,.apex,.siege,.cod) .hero{min-height:0;padding:18px 6px}body.siege .hero:before,body.cod .hero:before{opacity:.25}}
+@media(prefers-reduced-motion:reduce){.theme-scene-eyebrow:before{animation:none}}
