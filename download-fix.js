@@ -28,6 +28,7 @@
   async function downloadMac(chosen){if(typeof JSZip==='undefined')throw new Error('macOS packager did not load. Refresh and try again.');const r=await fetchFile('downloads/AppForge-macOS.zip');const zip=await JSZip.loadAsync(await r.arrayBuffer());const entry=zip.file('AppForge.app/Contents/MacOS/AppForge');if(!entry)throw new Error('macOS app package is invalid.');const binary=await entry.async('uint8array');const marker=new TextEncoder().encode(`${KEY_MARKER}${chosen.map(a=>a.key).join(',')}:END\n`);const combined=new Uint8Array(binary.length+marker.length);combined.set(binary);combined.set(marker,binary.length);zip.file('AppForge.app/Contents/MacOS/AppForge',combined,{binary:true,unixPermissions:0o755});saveBlob(await zip.generateAsync({type:'blob',platform:'UNIX',compression:'DEFLATE'}),'AppForge-macOS.zip')}
 
   const linuxNative = {
+    'wine':{apt:'wine',dnf:'wine',pacman:'wine',zypper:'wine'},
     'vlc-media-player':{apt:'vlc',dnf:'vlc',pacman:'vlc',zypper:'vlc'},
     'mozilla-firefox':{apt:'firefox',dnf:'firefox',pacman:'firefox',zypper:'MozillaFirefox'},
     'git':{apt:'git',dnf:'git',pacman:'git',zypper:'git'},
