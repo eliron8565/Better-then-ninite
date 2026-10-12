@@ -28,6 +28,21 @@
   async function downloadMac(chosen){if(typeof JSZip==='undefined')throw new Error('macOS packager did not load. Refresh and try again.');const r=await fetchFile('downloads/AppForge-macOS.zip');const zip=await JSZip.loadAsync(await r.arrayBuffer());const entry=zip.file('AppForge.app/Contents/MacOS/AppForge');if(!entry)throw new Error('macOS app package is invalid.');const binary=await entry.async('uint8array');const marker=new TextEncoder().encode(`${KEY_MARKER}${chosen.map(a=>a.key).join(',')}:END\n`);const combined=new Uint8Array(binary.length+marker.length);combined.set(binary);combined.set(marker,binary.length);zip.file('AppForge.app/Contents/MacOS/AppForge',combined,{binary:true,unixPermissions:0o755});saveBlob(await zip.generateAsync({type:'blob',platform:'UNIX',compression:'DEFLATE'}),'AppForge-macOS.zip')}
 
   const linuxNative = {
+    'yazi':{apt:'yazi',dnf:'yazi',pacman:'yazi',zypper:'yazi'},
+    'krusader':{apt:'krusader',dnf:'krusader',pacman:'krusader',zypper:'krusader'},
+    'gnome-files':{apt:'nautilus',dnf:'nautilus',pacman:'nautilus',zypper:'nautilus'},
+    'konqueror':{apt:'konqueror',dnf:'konqueror',pacman:'konqueror',zypper:'konqueror'},
+    'double-commander':{apt:'doublecmd-gtk',dnf:'doublecmd-gtk',pacman:'doublecmd-gtk2',zypper:'doublecmd-gtk'},
+    'midnight-commander':{apt:'mc',dnf:'mc',pacman:'mc',zypper:'mc'},
+    'dolphin':{apt:'dolphin',dnf:'dolphin',pacman:'dolphin',zypper:'dolphin'},
+    'ranger':{apt:'ranger',dnf:'ranger',pacman:'ranger',zypper:'ranger'},
+    'thunar':{apt:'thunar',dnf:'thunar',pacman:'thunar',zypper:'thunar'},
+    'pcmanfm':{apt:'pcmanfm',dnf:'pcmanfm',pacman:'pcmanfm',zypper:'pcmanfm'},
+    'vifm':{apt:'vifm',dnf:'vifm',pacman:'vifm',zypper:'vifm'},
+    'caja':{apt:'caja',dnf:'caja',pacman:'caja',zypper:'caja'},
+    'lf':{apt:'lf',dnf:'lf',pacman:'lf',zypper:'lf'},
+    'nemo':{apt:'nemo',dnf:'nemo',pacman:'nemo',zypper:'nemo'},
+    'superfile':{},
     'vim':{apt:'vim',dnf:'vim-enhanced',pacman:'vim',zypper:'vim'},
     'wine':{apt:'wine',dnf:'wine',pacman:'wine',zypper:'wine'},
     'vlc-media-player':{apt:'vlc',dnf:'vlc',pacman:'vlc',zypper:'vlc'},
@@ -64,7 +79,7 @@
     if(branches.length)parts.push(branches.join(' ')+'; fi');
     if(ids.length){
       const install='flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo && flatpak install --user -y flathub '+ids.map(quote).join(' ');
-      parts.push('if [ "$native_done" -eq 0 ]; then if command -v flatpak >/dev/null 2>&1; then '+install+'; else echo "Flatpak is needed for this selection. See https://flatpak.org/setup/"; fi; fi');
+      parts.push('if command -v flatpak >/dev/null 2>&1; then '+install+'; else echo "Flatpak is needed for this selection. See https://flatpak.org/setup/"; fi');
     }
     if(manual.length)parts.push('echo "Manual downloads:"; '+manual.map(v=>'echo '+quote(v)).join('; '));
     return parts.join('; ');
