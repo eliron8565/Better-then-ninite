@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 
+// Build refresh: regenerate the Windows installer from the latest AppForge source.
 namespace AppForgeInstaller;
 
 internal static class Program
