@@ -64,7 +64,7 @@
       const install='flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo && flatpak install --user -y flathub '+ids.map(quote).join(' ');
       parts.push('if [ "$native_done" -eq 0 ]; then if command -v flatpak >/dev/null 2>&1; then '+install+'; else echo "Flatpak is needed for this selection. See https://flatpak.org/setup/"; fi; fi');
     }
-    if(manual.length)parts.push('printf %s\\\\n '+manual.map(v=>"'"+v+"'").join(' ')+'; echo "Download the Linux installer from the official page above."');
+    if(manual.length)parts.push('echo "Manual downloads:"; '+manual.map(v=>'echo '+quote(v)).join('; '));
     return parts.join('; ');
   }
   function commandFor(chosen){if(platform==='windows'){const ids=chosen.map(a=>a.pkg.windows).filter(v=>v&&!String(v).startsWith('url:'));return ids.map(id=>`winget install --id "${id}" -e --silent --accept-package-agreements --accept-source-agreements --disable-interactivity`).join(' ; ')}if(platform==='linux')return linuxCommand(chosen);const pkgs=chosen.map(a=>a.pkg.mac).filter(Boolean),f=pkgs.filter(p=>p.type==='formula').map(p=>p.id),c=pkgs.filter(p=>p.type==='cask').map(p=>p.id),parts=[];if(f.length)parts.push(`brew install ${f.map(x=>`"${x}"`).join(' ')}`);if(c.length)parts.push(`brew install --cask ${c.map(x=>`"${x}"`).join(' ')}`);const urls=pkgs.filter(p=>p.type==='url').map(p=>p.id);if(urls.length)parts.push(urls.map(u=>'open "'+u+'"').join(' ; '));return parts.join(' ; ')}
