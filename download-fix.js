@@ -28,6 +28,13 @@
   async function downloadMac(chosen){if(typeof JSZip==='undefined')throw new Error('macOS packager did not load. Refresh and try again.');const r=await fetchFile('downloads/AppForge-macOS.zip');const zip=await JSZip.loadAsync(await r.arrayBuffer());const entry=zip.file('AppForge.app/Contents/MacOS/AppForge');if(!entry)throw new Error('macOS app package is invalid.');const binary=await entry.async('uint8array');const marker=new TextEncoder().encode(`${KEY_MARKER}${chosen.map(a=>a.key).join(',')}:END\n`);const combined=new Uint8Array(binary.length+marker.length);combined.set(binary);combined.set(marker,binary.length);zip.file('AppForge.app/Contents/MacOS/AppForge',combined,{binary:true,unixPermissions:0o755});saveBlob(await zip.generateAsync({type:'blob',platform:'UNIX',compression:'DEFLATE'}),'AppForge-macOS.zip')}
 
   const linuxNative = {
+
+    'bottles':{apt:'bottles',dnf:'bottles',pacman:'bottles'},
+    'lutris':{apt:'lutris',dnf:'lutris',pacman:'lutris',zypper:'lutris'},
+    'protonup-qt':{pacman:'protonup-qt'},
+    'gamemode':{apt:'gamemode',dnf:'gamemode',pacman:'gamemode',zypper:'gamemode'},
+    'mangohud':{apt:'mangohud',dnf:'mangohud',pacman:'mangohud',zypper:'mangohud'},
+    'winetricks':{apt:'winetricks',dnf:'winetricks',pacman:'winetricks',zypper:'winetricks'},
     'yazi':{apt:'yazi',dnf:'yazi',pacman:'yazi',zypper:'yazi'},
     'krusader':{apt:'krusader',dnf:'krusader',pacman:'krusader',zypper:'krusader'},
     'gnome-files':{apt:'nautilus',dnf:'nautilus',pacman:'nautilus',zypper:'nautilus'},
@@ -64,28 +71,60 @@
     'obs':{apt:'obs-studio',dnf:'obs-studio',pacman:'obs-studio',zypper:'obs-studio'}
   };
   function linuxCommand(chosen){
-    const ids=[...new Set(chosen.map(a=>a.pkg?.linux).filter(v=>typeof v==='string'&&/^[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)+$/.test(v)))];
-    const managers=['apt','dnf','pacman','zypper'];
-    const mappings=Object.fromEntries(managers.map(m=>[m,[...new Set(chosen.map(a=>linuxNative[a.key]?.[m]).filter(Boolean))]]));
-    const manual=chosen.filter(a=>typeof a.pkg?.linux==='string'&&a.pkg.linux.startsWith('url:https://')).map(a=>a.pkg.linux.slice(4));
-    if(!ids.length&&!managers.some(m=>mappings[m].length)&&!manual.length)return '';
-    const quote=v=>"'"+v.replace(/'/g,"'\\''")+"'";
-    const branches=managers.filter(m=>mappings[m].length).map((m,i)=>{
-      const detect={apt:'apt-get',dnf:'dnf',pacman:'pacman',zypper:'zypper'}[m];
-      const prefix={apt:'sudo apt-get update && sudo apt-get install -y ',dnf:'sudo dnf install -y ',pacman:'sudo pacman -S --needed --noconfirm ',zypper:'sudo zypper install -y '}[m];
-      return (i?'elif':'if')+' command -v '+detect+' >/dev/null 2>&1; then '+prefix+mappings[m].map(quote).join(' ')+'; native_done=1';
-    });
-    const parts=['native_done=0'];
-    if(branches.length)parts.push(branches.join(' ')+'; fi');
-    if(ids.length){
-      const install='flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo && flatpak install --user -y flathub '+ids.map(quote).join(' ');
-      parts.push('if command -v flatpak >/dev/null 2>&1; then '+install+'; else echo "Flatpak is needed for this selection. See https://flatpak.org/setup/"; fi');
+    const chosenManager=document.querySelector('#linuxPackageManager')?.value||'auto';
+    const managerBin={apt:'apt-get',dnf:'dnf',pacman:'pacman',zypper:'zypper',apk:'apk',xbps:'xbps-install',emerge:'emerge',eopkg:'eopkg',nix:'nix'};
+    const nativeExtra={
+      apk:{'wine':'wine','vim':'vim','git':'git','python-3':'python3','gnome-files':'nautilus','midnight-commander':'mc','ranger':'ranger','thunar':'thunar','pcmanfm':'pcmanfm','vifm':'vifm','nemo':'nemo','dolphin':'dolphin','lutris':'lutris','gamemode':'gamemode','mangohud':'mangohud','winetricks':'winetricks'},
+      xbps:{'wine':'wine','vim':'vim','git':'git','python-3':'python3','gnome-files':'nautilus','midnight-commander':'mc','ranger':'ranger','thunar':'thunar','pcmanfm':'pcmanfm','vifm':'vifm','nemo':'nemo','dolphin':'dolphin','lutris':'lutris','gamemode':'gamemode','mangohud':'mangohud','winetricks':'winetricks'},
+      emerge:{'wine':'app-emulation/wine-vanilla','vim':'app-editors/vim','git':'dev-vcs/git','python-3':'dev-lang/python','gnome-files':'gnome-base/nautilus','midnight-commander':'app-misc/mc','ranger':'app-misc/ranger','thunar':'xfce-base/thunar','dolphin':'kde-apps/dolphin','lutris':'games-util/lutris','gamemode':'games-util/gamemode','mangohud':'games-util/mangohud','winetricks':'app-emulation/winetricks'},
+      eopkg:{'wine':'wine','vim':'vim','git':'git','python-3':'python3','gnome-files':'nautilus','midnight-commander':'mc','ranger':'ranger','thunar':'thunar','dolphin':'dolphin','lutris':'lutris'},
+      nix:{'wine':'wine','vim':'vim','git':'git','python-3':'python3','gnome-files':'nautilus','midnight-commander':'mc','ranger':'ranger','thunar':'xfce.thunar','dolphin':'kdePackages.dolphin','gamemode':'gamemode','mangohud':'mangohud','winetricks':'winetricks','lutris':'lutris'}
+    };
+    const managers=Object.keys(managerBin);
+    const shell=v=>"'"+String(v).replace(/'/g,"'\\''")+"'";
+    const flatpakIds=chosen.filter(a=>typeof a.pkg?.linux==='string'&&/^[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)+$/.test(a.pkg.linux)).map(a=>a.pkg.linux);
+    const urls=chosen.filter(a=>a.pkg?.linux?.startsWith('url:https://')).map(a=>a.pkg.linux.slice(4));
+    const installables=chosen.filter(a=>a.pkg?.linux?.startsWith('native:')||flatpakIds.includes(a.pkg?.linux));
+    if(!installables.length&&!urls.length)return '';
+    const lines=['#!/usr/bin/env bash','# AppForge Linux installer — review before running.','# Select manager: '+chosenManager,'set -u',
+      'manager='+shell(chosenManager),'if [ "$manager" = auto ]; then',
+      ...managers.map((m,i)=>(i?'elif':'if')+' command -v '+managerBin[m]+' >/dev/null 2>&1; then manager='+m),
+      'else manager=none; fi','fi',
+      'echo "AppForge package manager: $manager"'];
+    for(const m of managers){
+      const mappings=installables.map(a=>({a,p:(linuxNative[a.key]?.[m]||nativeExtra[m]?.[a.key])})).filter(x=>x.p);
+      if(!mappings.length)continue;
+      const prefix={apt:'sudo apt-get update && sudo apt-get install -y',dnf:'sudo dnf install -y',pacman:'sudo pacman -S --needed --noconfirm',zypper:'sudo zypper install -y',apk:'sudo apk add',xbps:'sudo xbps-install -Sy',emerge:'sudo emerge --ask=n',eopkg:'sudo eopkg install -y',nix:'nix profile install'}[m];
+      const packages=[...new Set(mappings.map(x=>m==='nix'?'nixpkgs#'+x.p:x.p))];
+      lines.push('if [ "$manager" = '+m+' ]; then');
+      lines.push('  if '+managerBin[m]+' --version >/dev/null 2>&1; then');
+      lines.push('    '+prefix+' '+packages.map(shell).join(' ')+' || echo "Native installation failed; inspect package names or repositories."');
+      lines.push('  else echo "Selected manager '+m+' is not installed."; fi');
+      lines.push('fi');
     }
-    if(manual.length)parts.push('echo "Manual downloads:"; '+manual.map(v=>'echo '+quote(v)).join('; '));
-    return parts.join('; ');
+    // Flatpak apps are installed regardless of whether native apps are also selected.
+    // Do not install a second copy when the current manager already handles that app.
+    for(const a of installables){
+      const id=a.pkg?.linux;
+      const hasFlatpak=flatpakIds.includes(id);
+      if(!hasFlatpak)continue;
+      const nativeManagers=managers.filter(m=>linuxNative[a.key]?.[m]||nativeExtra[m]?.[a.key]);
+      lines.push('if '+(chosenManager==='flatpak'?'true':nativeManagers.length?'[ "$manager" != '+nativeManagers.map(shell).join(' ] && [ "$manager" != ')+' ]':'true')+'; then');
+      lines.push('  if command -v flatpak >/dev/null 2>&1; then');
+      lines.push('    flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo && flatpak install --user -y flathub '+shell(id));
+      lines.push('  else echo '+shell('Flatpak is required for '+a.name+': https://flatpak.org/setup/')+'; fi');
+      lines.push('fi');
+    }
+    for(const a of installables.filter(a=>a.pkg?.linux?.startsWith('native:'))){
+      const supporting=managers.filter(m=>linuxNative[a.key]?.[m]||nativeExtra[m]?.[a.key]);
+      lines.push('if '+(supporting.length?'[ "$manager" != '+supporting.map(shell).join(' ] && [ "$manager" != ')+' ]':'true')+'; then echo '+shell('No verified native package mapping for '+a.name+' on the selected manager. See the project website.')+'; fi');
+    }
+    for(const url of urls)lines.push('echo '+shell('Official/manual install: '+url));
+    lines.push('echo "AppForge: installation commands finished. Review any warnings above."');
+    return "bash <<'APPFORGE_INSTALL'\n"+lines.join('\n')+"\nAPPFORGE_INSTALL";
   }
   function commandFor(chosen){if(platform==='windows'){const ids=chosen.map(a=>a.pkg.windows).filter(v=>v&&!String(v).startsWith('url:'));return ids.map(id=>`winget install --id "${id}" -e --silent --accept-package-agreements --accept-source-agreements --disable-interactivity`).join(' ; ')}if(platform==='linux')return linuxCommand(chosen);const pkgs=chosen.map(a=>a.pkg.mac).filter(Boolean),f=pkgs.filter(p=>p.type==='formula').map(p=>p.id),c=pkgs.filter(p=>p.type==='cask').map(p=>p.id),parts=[];if(f.length)parts.push(`brew install ${f.map(x=>`"${x}"`).join(' ')}`);if(c.length)parts.push(`brew install --cask ${c.map(x=>`"${x}"`).join(' ')}`);const urls=pkgs.filter(p=>p.type==='url').map(p=>p.id);if(urls.length)parts.push(urls.map(u=>'open "'+u+'"').join(' ; '));return parts.join(' ; ')}
-  function refreshCommand(){const box=document.querySelector('#installCommand'),hint=document.querySelector('#commandHint');if(!box)return;const chosen=availableApps().filter(a=>selected.has(a.key)),cmd=commandFor(chosen);const mgr=document.querySelector('#linuxManagerWrap');if(mgr)mgr.style.display='none';box.textContent=cmd||'No compatible packages found for this manager. Try Flatpak or select another app.';if(hint)hint.textContent=platform==='windows'?'Runs with Windows Package Manager (winget).':platform==='linux'?'Auto-detects native package managers; falls back to Flatpak when needed.':'Runs with Homebrew.'}
+  function refreshCommand(){const box=document.querySelector('#installCommand'),hint=document.querySelector('#commandHint');if(!box)return;const chosen=availableApps().filter(a=>selected.has(a.key)),cmd=commandFor(chosen);const mgr=document.querySelector('#linuxManagerWrap');if(mgr)mgr.style.display=platform==='linux'?'block':'none';box.textContent=cmd||'No compatible packages found for this manager. Try Flatpak or select another app.';if(hint)hint.textContent=platform==='windows'?'Runs with Windows Package Manager (winget).':platform==='linux'?'Supports APT, DNF, Pacman, Zypper, APK, XBPS, Portage, Eopkg, Nix and Flatpak where package mappings exist. Review script and warnings before running.':'Runs with Homebrew.'}
   function wireCommand(){const mgr=document.querySelector('#linuxPackageManager');if(mgr&&!mgr.dataset.wired){mgr.dataset.wired='1';mgr.addEventListener('change',refreshCommand);}const copy=document.querySelector('#copyInstallCommand');if(copy&&!copy.dataset.wired){copy.dataset.wired='1';copy.addEventListener('click',async()=>{refreshCommand();const text=document.querySelector('#installCommand')?.textContent||'';if(!text||text.startsWith('No compatible'))return;try{await navigator.clipboard.writeText(text);const old=copy.textContent;copy.textContent='✓ Copied';setTimeout(()=>copy.textContent=old,1600)}catch{alert('Could not copy automatically.')}})}const review=document.querySelector('#reviewButton');if(review&&!review.dataset.commandWired){review.dataset.commandWired='1';review.addEventListener('click',()=>setTimeout(refreshCommand,0))}}
   function wire(){const old=document.querySelector('#downloadScript');if(!old||old.dataset.nativeDownload==='1'){wireCommand();return}const button=old.cloneNode(true);button.dataset.nativeDownload='1';old.replaceWith(button);button.addEventListener('click',async()=>{const chosen=availableApps().filter(a=>selected.has(a.key));if(!chosen.length)return;const oldText=button.textContent;button.disabled=true;button.textContent=platform==='windows'?'Downloading AppForge…':'Preparing AppForge…';try{if(platform==='windows')downloadWindows(chosen);else if(platform==='linux')await downloadLinux(chosen);else await downloadMac(chosen)}catch(e){alert(`AppForge: ${e.message}`)}finally{button.disabled=false;button.textContent=oldText}});wireCommand()}
   wire();
