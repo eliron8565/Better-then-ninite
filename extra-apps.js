@@ -149,7 +149,21 @@
   if(!apps.some(a=>a.key==='caja')) apps.push({name:"Caja",key:'caja',category:'File Managers',domain:'mate-desktop.org',popular:8,tags:['linux','free','utilities'],pkg:{linux:'native:caja'},logo:fav('mate-desktop.org'),desc:'Free file manager for Linux.'});
   if(!apps.some(a=>a.key==='lf')) apps.push({name:"lf",key:'lf',category:'File Managers',domain:'github.com/gokcehan/lf',popular:8,tags:['linux','free','utilities'],pkg:{linux:'native:lf',mac:{type:'formula',id:'lf'}},logo:fav('github.com'),desc:'Free file manager for Linux.'});
   if(!apps.some(a=>a.key==='nemo')) apps.push({name:"Nemo",key:'nemo',category:'File Managers',domain:'github.com/linuxmint/nemo',popular:8,tags:['linux','free','utilities'],pkg:{linux:'native:nemo'},logo:fav('github.com'),desc:'Free file manager for Linux.'});
-  if(!apps.some(a=>a.key==='superfile')) apps.push({name:"Superfile",key:'superfile',category:'File Managers',domain:'github.com/yorukot/superfile',popular:8,tags:['linux','free','utilities'],pkg:{linux:'native:superfile',mac:{type:'formula',id:'superfile'}},logo:fav('github.com'),desc:'Free file manager for Linux.'});
+  if(!apps.some(a=>a.key==='superfile')) apps.push({name:"Superfile",key:'superfile',category:'File Managers',domain:'github.com/yorukot/superfile',popular:8,tags:['linux','free','utilities'],pkg:{linux:'url:https://github.com/yorukot/superfile#installation',mac:{type:'formula',id:'superfile'}},logo:fav('github.com'),desc:'Free file manager for Linux.'});
+
+  // Linux gaming and Windows-compatibility tools. No Windows installer indices.
+  const linuxGamingTools=[
+    {name:'Bottles',key:'bottles',domain:'usebottles.com',linux:'com.usebottles.bottles',desc:'Manage Wine prefixes with a graphical interface.'},
+    {name:'Lutris',key:'lutris',domain:'lutris.net',linux:'net.lutris.Lutris',desc:'Install and manage Linux and Windows games; game support varies.'},
+    {name:'ProtonUp-Qt',key:'protonup-qt',domain:'github.com/DavidoTek/ProtonUp-Qt',linux:'net.davidotek.pupgui2',desc:'Manage GE-Proton and compatible game runner versions.'},
+    {name:'GameMode',key:'gamemode',domain:'github.com/FeralInteractive/gamemode',linux:'native:gamemode',desc:'Feral Interactive game performance optimization daemon.'},
+    {name:'MangoHud',key:'mangohud',domain:'github.com/flightlessmango/MangoHud',linux:'native:mangohud',desc:'Gaming FPS and performance overlay.'},
+    {name:'Winetricks',key:'winetricks',domain:'github.com/Winetricks/winetricks',linux:'native:winetricks',desc:'Configure extra Windows components for Wine prefixes.'}
+  ];
+  for(const tool of linuxGamingTools){
+    if(apps.some(a=>a.key===tool.key))continue;
+    apps.push({name:tool.name,key:tool.key,category:'Linux Gaming & Compatibility',domain:tool.domain,popular:9,tags:['linux','gaming','free'],pkg:{linux:tool.linux},logo:fav(tool.domain),desc:tool.desc});
+  }
   const browserGroups = {
     'Google Chrome':'Popular Browsers','Mozilla Firefox':'Popular Browsers','Microsoft Edge':'Popular Browsers',
     'Brave':'AI Browsers','Opera':'AI Browsers','Vivaldi':'Popular Browsers'
