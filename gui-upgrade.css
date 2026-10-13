@@ -569,3 +569,24 @@ body.cod .theme-dashboard-title{font-family:monospace}
 @media(min-width:1100px){body:is(.cyberpunk,.gta,.minecraft,.league,.apex,.siege,.cod) .hero-copy{max-width:none}body:is(.cyberpunk,.gta,.minecraft,.league,.apex,.siege,.cod) .theme-dashboard{max-width:440px}}
 @media(max-width:760px){.theme-dashboard{padding:14px;max-width:100%}.theme-dashboard-icon{width:44px;height:44px}.theme-dashboard-title{font-size:13px}}
 @media(prefers-reduced-motion:reduce){.theme-dashboard,.theme-dashboard-action,.theme-dashboard-progress span{transition:none}}
+
+
+/* Linux anti-cheat reference & package manager UI */
+.linux-gaming-info{position:relative;margin:35px 0 28px;padding:27px;border:1px solid rgba(112,232,179,.27);border-radius:22px;background:linear-gradient(145deg,rgba(13,36,38,.98),rgba(8,18,32,.97));box-shadow:0 22px 65px rgba(0,0,0,.23);overflow:hidden}
+.linux-gaming-info:before{content:"";position:absolute;width:280px;height:280px;right:-75px;top:-120px;background:radial-gradient(circle,rgba(112,232,179,.17),transparent 70%);pointer-events:none}
+.linux-gaming-top{display:flex;justify-content:space-between;align-items:flex-start;gap:22px}
+.linux-gaming-info .eyebrow{color:#70e8b3}
+.linux-gaming-info h2{font-size:clamp(24px,2.7vw,35px);letter-spacing:-.04em;margin:10px 0}
+.linux-gaming-top p{max-width:740px;line-height:1.6;color:#b8cbd0}
+.linux-status-pill{flex-shrink:0;border:1px solid rgba(112,232,179,.5);border-radius:50px;padding:10px 15px;color:#70e8b3;font-size:10px;font-weight:900;letter-spacing:.09em}
+.linux-gaming-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:21px}
+.linux-gaming-grid article{padding:20px;border:1px solid rgba(112,232,179,.16);border-radius:15px;background:rgba(4,17,23,.7)}
+.linux-gaming-grid strong{font-size:17px;color:#e8faf5}
+.linux-gaming-grid p{font-size:13px;line-height:1.65;color:#b3cbd0;min-height:85px;margin:12px 0}
+.linux-gaming-grid a{color:#70e8b3;font-weight:800;text-decoration:none}
+.linux-gaming-grid a:hover{text-decoration:underline}
+.linux-gaming-disclaimer{margin-top:16px;font-size:12px;color:#aabdc5}
+#linuxManagerWrap{color:var(--text,#e5edf8)}
+#linuxPackageManager{width:100%;max-width:380px;margin-top:8px;padding:10px 12px;border:1px solid rgba(112,232,179,.3);border-radius:9px;background:#102435;color:#eaf5ff}
+#installCommand{white-space:pre-wrap;overflow-wrap:anywhere;max-height:350px;overflow:auto;font-size:11px;line-height:1.65}
+@media(max-width:760px){.linux-gaming-info{padding:18px}.linux-gaming-top{display:block}.linux-status-pill{display:inline-block;margin-top:9px}.linux-gaming-grid{grid-template-columns:1fr}.linux-gaming-grid p{min-height:0}}
