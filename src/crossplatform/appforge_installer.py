@@ -42,6 +42,13 @@ CATALOG={
 'zed':('Zed','dev.zed.Zed','zed'),
 'kate':('Kate','org.kde.kate','kate'),
 'apache-netbeans-ide':('Apache NetBeans IDE','org.apache.netbeans','netbeans'),
+'vscodium':('VSCodium','com.vscodium.codium','vscodium'),
+'neovim':('Neovim','io.neovim.nvim',None),
+'helix-editor':('Helix Editor','com.helix_editor.Helix',None),
+'filelight':('Filelight','org.kde.filelight',None),
+'impression':('Impression','io.gitlab.adhami3310.Impression',None),
+'pear-desktop':('Pear Desktop',None,'pear-devs/pear/pear-desktop'),
+'twintail-launcher':('Twintail Launcher','app.twintaillauncher.ttl',None),
 'parabolic':('Parabolic','org.nickvision.tubeconverter',None),
 'upscayl':('Upscayl','org.upscayl.Upscayl',None),
 'jan':('Jan','ai.jan.Jan',None),
@@ -57,7 +64,7 @@ SECURITY_NAMES={'nmap':'Nmap','john-the-ripper':'John the Ripper','metasploit-fr
 SECURITY_MANUAL_URL='https://docs.metasploit.com/docs/using-metasploit/getting-started/nightly-installers.html'
 
 MAC_FORMULAS={
-'git':'git','python-3':'python','node-js-lts':'node','7-zip':'sevenzip','nmap':'nmap','john-the-ripper':'john-jumbo'
+'git':'git','python-3':'python','node-js-lts':'node','7-zip':'sevenzip','neovim':'neovim','helix-editor':'helix','nmap':'nmap','john-the-ripper':'john-jumbo'
 }
 MAC_CASKS={
 'github-desktop':'github','docker-desktop':'docker','pycharm-community':'pycharm-ce','intellij-idea-community':'intellij-idea-ce','balenaetcher':'balenaetcher','raycast':'raycast','rectangle':'rectangle','iterm2':'iterm2'
@@ -73,6 +80,7 @@ MANUAL_APPS={
   'eden-emulator':('Eden Emulator','https://eden-emu.dev/downloads/',{'linux','darwin'}),
   'odysseus-ai-workspace':('Odysseus AI Workspace','https://github.com/odysseus-dev/odysseus',{'linux','darwin'}),
   'coolercontrol':('CoolerControl','https://docs.coolercontrol.org/installation/',{'linux'}),
+  'pear-desktop':('Pear Desktop','https://github.com/pear-devs/pear-desktop/releases/latest',{'linux'}),
   'tmog-task-manager-og':('TMOG (Task Manager OG)','https://tmog.org/',{'linux','darwin'})
 }
 
@@ -98,7 +106,8 @@ def supported(keys):
         if key in CATALOG:
             name,linux,mac=CATALOG[key]
             if sys.platform=='darwin':
-                if mac: out.append((key,name,'cask',mac))
+                if key in MAC_FORMULAS: out.append((key,name,'formula',MAC_FORMULAS[key]))
+                elif mac: out.append((key,name,'cask',mac))
                 elif key in MANUAL_APPS and 'darwin' in MANUAL_APPS[key][2]:
                     out.append((key,name,'url',MANUAL_APPS[key][1]))
             elif sys.platform.startswith('linux'):
