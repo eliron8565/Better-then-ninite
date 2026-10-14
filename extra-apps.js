@@ -110,13 +110,26 @@
     // New Windows entries: never reuse existing selection indices (145/146 are security tools).
     ['Zed','Development','zed.dev',9,'ZedIndustries.Zed',147,['developer','free']],
     ['Kate','Development','kate-editor.org',9,'KDE.Kate',148,['developer','free']],
-    ['Apache NetBeans IDE','Development','netbeans.apache.org',9,'Apache.NetBeans',149,['developer','student','free']]
+    ['Apache NetBeans IDE','Development','netbeans.apache.org',9,'Apache.NetBeans',149,['developer','student','free']],
+    ['Parabolic','Media','nickvision.org/parabolic.html',9,'Nickvision.Parabolic',150,['media','free']],
+    ['Upscayl','Design & Imaging','upscayl.org',9,'Upscayl.Upscayl',151,['creator','ai','free']],
+    ['LocalAI','AI & Local Models','localai.io',9,'url:https://localai.io/',152,['ai','developer','free']],
+    ['Eden Emulator','Gaming','eden-emu.dev',9,'url:https://eden-emu.dev/downloads/',153,['gaming','free']],
+    ['Odysseus AI Workspace','AI & Local Models','odysseus-dev.github.io/odysseus/',8,'url:https://github.com/odysseus-dev/odysseus',154,['ai','developer','free']]
   ];
 
   for (const [name,category,domain,popular,windows,winIndex,tags] of extras) {
     const key=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
     if (apps.some(a=>a.key===key)) continue;
     const pkg={windows};
+
+    if(name==='Parabolic'){pkg.linux='org.nickvision.tubeconverter';pkg.mac={type:'url',id:'https://github.com/NickvisionApps/Parabolic/releases'};}
+    if(name==='Upscayl'){pkg.linux='org.upscayl.Upscayl';pkg.mac={type:'url',id:'https://github.com/upscayl/upscayl/releases'};}
+    if(name==='LocalAI'){pkg.linux='url:https://localai.io/';pkg.mac={type:'url',id:'https://localai.io/'};}
+    if(name==='Eden Emulator'){pkg.linux='url:https://eden-emu.dev/downloads/';pkg.mac={type:'url',id:'https://eden-emu.dev/downloads/'};}
+    if(name==='Odysseus AI Workspace'){pkg.linux='url:https://github.com/odysseus-dev/odysseus';pkg.mac={type:'url',id:'https://github.com/odysseus-dev/odysseus'};}
+    if(name==='Ollama'){pkg.linux='url:https://ollama.com/download/linux';pkg.mac={type:'url',id:'https://ollama.com/download'};}
+    if(name==='Jan'){pkg.linux='ai.jan.Jan';pkg.mac={type:'url',id:'https://www.jan.ai/download'};}
     if(name==='LibreWolf'){pkg.linux='io.gitlab.librewolf-community';pkg.mac={type:'cask',id:'librewolf'};}
     if(name==='Zed'){pkg.linux='dev.zed.Zed';pkg.mac={type:'cask',id:'zed'};}
     if(name==='Kate'){pkg.linux='org.kde.kate';pkg.mac={type:'cask',id:'kate'};}
@@ -138,9 +151,28 @@
       'LibreWolf':'Privacy-focused Firefox-based browser. Linux uses the LibreWolf Flathub package.',
       'Zed':'Fast code editor. On Linux uses a community-packaged, unverified Flathub build.',
       'Kate':'KDE advanced code editor with syntax highlighting, Git and terminal support.',
-      'Apache NetBeans IDE':'Java and multi-language IDE. Linux Flatpak is community-packaged and not verified by Apache.'
+      'Apache NetBeans IDE':'Java and multi-language IDE. Linux Flatpak is community-packaged and not verified by Apache.',
+      'Parabolic':'Free media downloader based on yt-dlp. Flatpak on Linux; official builds on Windows and macOS.',
+      'Upscayl':'Free open-source AI image upscaler with desktop builds for Windows, Linux and macOS.',
+      'LocalAI':'Run local AI APIs on your hardware. Installation requires platform-specific setup; opens official guide.',
+      'Eden Emulator':'Open-source Nintendo Switch emulator. Choose the correct official build for your OS and architecture.',
+      'Odysseus AI Workspace':'Self-hosted local-first AI workspace. Requires setup such as Docker and local/server models.'
     };
     apps.push({name,category,domain,popular,tags,pkg,winIndex,key,logo:fav(domain),desc:descriptions[name]||`${name} — install or open the official installer automatically.`});
+  }
+
+  // Keep previously listed Windows tools, but extend their official Linux/macOS choices.
+  for(const app of apps){
+    if(app.name==='Ollama'){
+      app.pkg.linux='url:https://ollama.com/download';
+      app.pkg.mac={type:'url',id:'https://ollama.com/download'};
+      app.desc='Run local LLMs on Windows, Linux or macOS using the official installer.';
+    }
+    if(app.name==='Jan'){
+      app.pkg.linux='ai.jan.Jan';
+      app.pkg.mac={type:'url',id:'https://www.jan.ai/download'};
+      app.desc='Local AI desktop assistant; official Linux Flatpak and Windows/macOS downloads.';
+    }
   }
 
   // Security assessment tools. Windows indexes are append-only to preserve installer bitsets.
@@ -222,6 +254,15 @@
     desc:'Launch supported Windows and Linux games with UMU/Proton. Does not bypass unsupported anti-cheat.'
   });
 
+  // CoolerControl controls fan/temperature hardware via a system daemon; use upstream
+  // distro-specific setup instead of assuming a standalone Flatpak is sufficient.
+  if(!apps.some(a=>a.key==='coolercontrol')) apps.push({
+    name:'CoolerControl',key:'coolercontrol',category:'Utilities',
+    domain:'coolercontrol.org',popular:9,tags:['linux','hardware','free'],
+    pkg:{linux:'url:https://docs.coolercontrol.org/installation/'},
+    logo:fav('docs.coolercontrol.org'),
+    desc:'Linux fan/pump control with hardware daemon. Follow official distro instructions and hardware compatibility guidance.'
+  });
   // Linux gaming and Windows-compatibility tools. No Windows installer indices.
   const linuxGamingTools=[
     {name:'Bottles',key:'bottles',domain:'usebottles.com',linux:'com.usebottles.bottles',desc:'Manage Wine prefixes with a graphical interface.'},
