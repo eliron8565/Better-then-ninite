@@ -39,8 +39,16 @@ CATALOG={
 'floorp':('Floorp','one.ablaze.floorp','floorp'),
 }
 
+# Packages supported by the graphical Linux installer (other packages use the website command generator).
+LINUX_NATIVE={
+    'nmap': {'apt-get':'nmap','dnf':'nmap','pacman':'nmap','zypper':'nmap','apk':'nmap','xbps-install':'nmap','emerge':'net-analyzer/nmap','eopkg':'nmap','nix':'nmap'},
+    'john-the-ripper': {'apt-get':'john','dnf':'john','pacman':'john','zypper':'john','apk':'john','xbps-install':'john','emerge':'app-crypt/johntheripper','nix':'john'},
+}
+SECURITY_NAMES={'nmap':'Nmap','john-the-ripper':'John the Ripper','metasploit-framework':'Metasploit Framework'}
+SECURITY_MANUAL_URL='https://docs.metasploit.com/docs/using-metasploit/getting-started/nightly-installers.html'
+
 MAC_FORMULAS={
-'git':'git','python-3':'python','node-js-lts':'node','7-zip':'sevenzip'
+'git':'git','python-3':'python','node-js-lts':'node','7-zip':'sevenzip','nmap':'nmap','john-the-ripper':'john-jumbo'
 }
 MAC_CASKS={
 'github-desktop':'github','docker-desktop':'docker','pycharm-community':'pycharm-ce','intellij-idea-community':'intellij-idea-ce','balenaetcher':'balenaetcher','raycast':'raycast','rectangle':'rectangle','iterm2':'iterm2'
@@ -69,8 +77,14 @@ def supported(keys):
             name,linux,mac=CATALOG[key]
             if sys.platform=='darwin' and mac: out.append((key,name,'cask',mac))
             elif sys.platform.startswith('linux') and linux: out.append((key,name,'flatpak',linux))
+        elif sys.platform.startswith('linux') and key in LINUX_NATIVE:
+            out.append((key,SECURITY_NAMES[key],'native',key))
+        elif sys.platform.startswith('linux') and key=='metasploit-framework':
+            out.append((key,SECURITY_NAMES[key],'url',SECURITY_MANUAL_URL))
+        elif sys.platform=='darwin' and key=='metasploit-framework':
+            out.append((key,SECURITY_NAMES[key],'url',SECURITY_MANUAL_URL))
         elif sys.platform=='darwin' and key in MAC_FORMULAS:
-            out.append((key,key.replace('-',' ').title(),'formula',MAC_FORMULAS[key]))
+            out.append((key,SECURITY_NAMES.get(key,key.replace('-',' ').title()),'formula',MAC_FORMULAS[key]))
         elif sys.platform=='darwin' and key in MAC_CASKS:
             out.append((key,key.replace('-',' ').title(),'cask',MAC_CASKS[key]))
     return out
@@ -106,7 +120,7 @@ class AppForge(tk.Tk):
             row=tk.Frame(inner,bg='#102238'); row.pack(fill='x',padx=10,pady=5)
             tk.Checkbutton(row,variable=var,bg='#102238',activebackground='#102238',selectcolor='#102238').pack(side='left',padx=10,pady=10)
             tk.Label(row,text=name,fg='white',bg='#102238',font=('Arial',11,'bold')).pack(side='left',padx=(4,10))
-            tk.Label(row,text='Flatpak' if kind=='flatpak' else 'Homebrew',fg='#7f9bb7',bg='#102238',font=('Arial',9)).pack(side='right',padx=12)
+            tk.Label(row,text={'flatpak':'Flatpak','native':'Linux package','url':'Official instructions','formula':'Homebrew','cask':'Homebrew'}.get(kind,'Package'),fg='#7f9bb7',bg='#102238',font=('Arial',9)).pack(side='right',padx=12)
         bottom=tk.Frame(self,bg='#07111e'); bottom.pack(fill='x',padx=24,pady=(8,22))
         self.status=tk.Label(bottom,text='Ready',fg='#8fa8c2',bg='#07111e'); self.status.pack(anchor='w')
         self.progress=ttk.Progressbar(bottom,mode='determinate'); self.progress.pack(fill='x',pady=(6,10))
@@ -123,10 +137,45 @@ class AppForge(tk.Tk):
         p=subprocess.run(args,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
         if p.returncode!=0: raise RuntimeError((p.stderr or p.stdout or 'Installation failed').strip()[-500:])
 
+    def install_native_linux(self,key):
+        pkg_map=LINUX_NATIVE.get(key,{})
+        for manager,pkg in pkg_map.items():
+            if not shutil_which(manager): continue
+            if manager=='apt-get':
+                command=['apt-get','install','-y',pkg]
+            elif manager=='dnf':
+                command=['dnf','install','-y',pkg]
+            elif manager=='pacman':
+                command=['pacman','-S','--needed','--noconfirm',pkg]
+            elif manager=='zypper':
+                command=['zypper','install','-y',pkg]
+            elif manager=='apk':
+                command=['apk','add',pkg]
+            elif manager=='xbps-install':
+                command=['xbps-install','-Sy',pkg]
+            elif manager=='emerge':
+                command=['emerge','--ask=n',pkg]
+            elif manager=='eopkg':
+                command=['eopkg','install','-y',pkg]
+            elif manager=='nix':
+                self.run_hidden(['nix','profile','install','nixpkgs#'+pkg])
+                return
+            else: continue
+            # Prefer graphical authentication; sudo -n fails promptly when not authorized.
+            if os.geteuid()==0:
+                self.run_hidden(command)
+            elif shutil_which('pkexec'):
+                self.run_hidden(['pkexec']+command)
+            else:
+                self.run_hidden(['sudo','-n']+command)
+            return
+        raise RuntimeError('No supported native repository for '+key+'. Use the website Linux script or official installation guide.')
+
     def install_all(self,chosen):
         ok=0
+        manual=0
         try:
-            if sys.platform.startswith('linux'):
+            if sys.platform.startswith('linux') and any(a[2]=='flatpak' for a in chosen):
                 if not shutil_which('flatpak'): raise RuntimeError('Flatpak is required on this Linux system.')
                 self.run_hidden(['flatpak','remote-add','--if-not-exists','flathub','https://flathub.org/repo/flathub.flatpakrepo'])
             elif sys.platform=='darwin' and not shutil_which('brew'):
@@ -135,13 +184,19 @@ class AppForge(tk.Tk):
                 self.after(0,lambda n=name:self.status.config(text=f'Installing {n}...'))
                 try:
                     if kind=='flatpak': self.run_hidden(['flatpak','install','-y','flathub',pkg])
+                    elif kind=='native': self.install_native_linux(key)
                     elif kind=='formula': self.run_hidden(['brew','install',pkg])
-                    else: self.run_hidden(['brew','install','--cask',pkg])
-                    ok+=1
+                    elif kind=='cask': self.run_hidden(['brew','install','--cask',pkg])
+                    elif kind=='url':
+                        import webbrowser
+                        if not webbrowser.open(pkg): raise RuntimeError('Could not open the official installation page: '+pkg)
+                        manual+=1
+                    else: raise RuntimeError('Unsupported installation type: '+kind)
+                    if kind!='url': ok+=1
                 except Exception as e:
                     self.after(0,lambda n=name,err=str(e):messagebox.showwarning('AppForge',f'{n}: {err}'))
                 self.after(0,lambda v=i:self.progress.configure(value=v))
-            self.after(0,lambda:self.status.config(text=f'Finished — {ok}/{len(chosen)} completed.'))
+            self.after(0,lambda:self.status.config(text=f'Finished — {ok} installed; {manual} official installation pages opened.'))
         except Exception as e:
             self.after(0,lambda:messagebox.showerror('AppForge',str(e)))
             self.after(0,lambda:self.status.config(text='Could not start installation.'))
