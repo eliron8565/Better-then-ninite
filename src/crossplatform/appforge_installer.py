@@ -49,6 +49,10 @@ CATALOG={
 'impression':('Impression','io.gitlab.adhami3310.Impression',None),
 'pear-desktop':('Pear Desktop',None,'pear-devs/pear/pear-desktop'),
 'twintail-launcher':('Twintail Launcher','app.twintaillauncher.ttl',None),
+'onlyoffice-desktop-editors':('ONLYOFFICE Desktop Editors','org.onlyoffice.desktopeditors','onlyoffice'),
+'jamesdsp':('JamesDSP','me.timschneeberger.jdsp4linux',None),
+'easyeffects':('EasyEffects','com.github.wwmm.easyeffects',None),
+'sober':('Sober','org.vinegarhq.Sober',None),
 'parabolic':('Parabolic','org.nickvision.tubeconverter',None),
 'upscayl':('Upscayl','org.upscayl.Upscayl',None),
 'jan':('Jan','ai.jan.Jan',None),
@@ -81,7 +85,8 @@ MANUAL_APPS={
   'odysseus-ai-workspace':('Odysseus AI Workspace','https://github.com/odysseus-dev/odysseus',{'linux','darwin'}),
   'coolercontrol':('CoolerControl','https://docs.coolercontrol.org/installation/',{'linux'}),
   'pear-desktop':('Pear Desktop','https://github.com/pear-devs/pear-desktop/releases/latest',{'linux'}),
-  'tmog-task-manager-og':('TMOG (Task Manager OG)','https://tmog.org/',{'linux','darwin'})
+  'tmog-task-manager-og':('TMOG (Task Manager OG)','https://tmog.org/',{'linux','darwin'}),
+  'spun':('Spun','https://github.com/yappologistic/Spun#install',{'linux'})
 }
 
 def selection_source():
