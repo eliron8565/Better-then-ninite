@@ -156,6 +156,27 @@
     desc:'Offline password-strength auditing tool; packages on Linux, Homebrew on macOS, official Windows downloads.'
   });
 
+  // RARLAB publishes WinRAR with a GUI on Windows only. Linux and macOS have
+  // an official command-line RAR build (trial), not a WinRAR GUI application.
+  const winrarApp=apps.find(a=>a.name==='WinRAR');
+  if(winrarApp){
+    winrarApp.desc='WinRAR archive manager for Windows (trial). Install using winget.';
+  }
+  if(!apps.some(a=>a.key==='rar-command-line')) apps.push({
+    name:'RAR (Linux / macOS CLI)',
+    key:'rar-command-line',
+    category:'Compression',
+    domain:'rarlab.com',
+    popular:8,
+    tags:['linux','compression','utilities'],
+    pkg:{
+      linux:'url:https://www.rarlab.com/download.htm',
+      mac:{type:'url',id:'https://www.rarlab.com/download.htm'}
+    },
+    logo:fav('rarlab.com'),
+    desc:'Official RARLAB RAR archive tools for Linux and macOS. Command-line only; trial. Choose your platform on the official download page.'
+  });
+
   // Linux-only native package; do not assign a Windows installer index.
   if(!apps.some(a=>a.key==='wine')) apps.push({name:'Wine',key:'wine',category:'Utilities',domain:'winehq.org',popular:9,tags:['linux','gaming','developer','free'],pkg:{linux:'native:wine'},logo:fav('winehq.org'),desc:'Run compatible Windows applications on Linux using Wine.'});
 
