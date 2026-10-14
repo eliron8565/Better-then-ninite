@@ -42,6 +42,10 @@ CATALOG={
 'zed':('Zed','dev.zed.Zed','zed'),
 'kate':('Kate','org.kde.kate','kate'),
 'apache-netbeans-ide':('Apache NetBeans IDE','org.apache.netbeans','netbeans'),
+'parabolic':('Parabolic','org.nickvision.tubeconverter',None),
+'upscayl':('Upscayl','org.upscayl.Upscayl',None),
+'jan':('Jan','ai.jan.Jan',None),
+
 }
 
 # Packages supported by the graphical Linux installer (other packages use the website command generator).
@@ -57,6 +61,18 @@ MAC_FORMULAS={
 }
 MAC_CASKS={
 'github-desktop':'github','docker-desktop':'docker','pycharm-community':'pycharm-ce','intellij-idea-community':'intellij-idea-ce','balenaetcher':'balenaetcher','raycast':'raycast','rectangle':'rectangle','iterm2':'iterm2'
+}
+
+# Official project pages for applications requiring interactive/platform-specific setup.
+MANUAL_APPS={
+  'parabolic':('Parabolic','https://github.com/NickvisionApps/Parabolic/releases',{'darwin'}),
+  'upscayl':('Upscayl','https://github.com/upscayl/upscayl/releases',{'darwin'}),
+  'jan':('Jan','https://www.jan.ai/download',{'darwin'}),
+  'ollama':('Ollama','https://ollama.com/download',{'linux','darwin'}),
+  'localai':('LocalAI','https://localai.io/',{'linux','darwin'}),
+  'eden-emulator':('Eden Emulator','https://eden-emu.dev/downloads/',{'linux','darwin'}),
+  'odysseus-ai-workspace':('Odysseus AI Workspace','https://github.com/odysseus-dev/odysseus',{'linux','darwin'}),
+  'coolercontrol':('CoolerControl','https://docs.coolercontrol.org/installation/',{'linux'})
 }
 
 def selection_source():
@@ -80,8 +96,16 @@ def supported(keys):
     for key in keys:
         if key in CATALOG:
             name,linux,mac=CATALOG[key]
-            if sys.platform=='darwin' and mac: out.append((key,name,'cask',mac))
-            elif sys.platform.startswith('linux') and linux: out.append((key,name,'flatpak',linux))
+            if sys.platform=='darwin':
+                if mac: out.append((key,name,'cask',mac))
+                elif key in MANUAL_APPS and 'darwin' in MANUAL_APPS[key][2]:
+                    out.append((key,name,'url',MANUAL_APPS[key][1]))
+            elif sys.platform.startswith('linux'):
+                if linux: out.append((key,name,'flatpak',linux))
+                elif key in MANUAL_APPS and 'linux' in MANUAL_APPS[key][2]:
+                    out.append((key,name,'url',MANUAL_APPS[key][1]))
+        elif key in MANUAL_APPS and (sys.platform in MANUAL_APPS[key][2] or (sys.platform.startswith('linux') and 'linux' in MANUAL_APPS[key][2])):
+            out.append((key,MANUAL_APPS[key][0],'url',MANUAL_APPS[key][1]))
         elif sys.platform.startswith('linux') and key in LINUX_NATIVE:
             out.append((key,SECURITY_NAMES[key],'native',key))
         elif sys.platform.startswith('linux') and key=='metasploit-framework':
@@ -185,7 +209,7 @@ class AppForge(tk.Tk):
             if sys.platform.startswith('linux') and any(a[2]=='flatpak' for a in chosen):
                 if not shutil_which('flatpak'): raise RuntimeError('Flatpak is required on this Linux system.')
                 self.run_hidden(['flatpak','remote-add','--if-not-exists','flathub','https://flathub.org/repo/flathub.flatpakrepo'])
-            elif sys.platform=='darwin' and not shutil_which('brew'):
+            elif sys.platform=='darwin' and any(a[2] in ('cask','formula') for a in chosen) and not shutil_which('brew'):
                 raise RuntimeError('Homebrew is required on this Mac.')
             for i,(key,name,kind,pkg) in enumerate(chosen,1):
                 self.after(0,lambda n=name:self.status.config(text=f'Installing {n}...'))
