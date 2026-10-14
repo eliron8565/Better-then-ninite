@@ -83,6 +83,8 @@ def supported(keys):
             out.append((key,SECURITY_NAMES[key],'url',SECURITY_MANUAL_URL))
         elif sys.platform=='darwin' and key=='metasploit-framework':
             out.append((key,SECURITY_NAMES[key],'url',SECURITY_MANUAL_URL))
+        elif key=='rar-command-line' and (sys.platform.startswith('linux') or sys.platform=='darwin'):
+            out.append((key,'RAR (Linux / macOS CLI)','url','https://www.rarlab.com/download.htm'))
         elif sys.platform=='darwin' and key in MAC_FORMULAS:
             out.append((key,SECURITY_NAMES.get(key,key.replace('-',' ').title()),'formula',MAC_FORMULAS[key]))
         elif sys.platform=='darwin' and key in MAC_CASKS:
