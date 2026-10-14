@@ -116,7 +116,13 @@
     ['LocalAI','AI & Local Models','localai.io',9,'url:https://localai.io/',152,['ai','developer','free']],
     ['Eden Emulator','Gaming','eden-emu.dev',9,'url:https://eden-emu.dev/downloads/',153,['gaming','free']],
     ['Odysseus AI Workspace','AI & Local Models','odysseus-dev.github.io/odysseus/',8,'url:https://github.com/odysseus-dev/odysseus',154,['ai','developer','free']],
-    ['TMOG (Task Manager OG)','Utilities','tmog.org',9,'url:https://tmog.org/',155,['utilities','free']]
+    ['TMOG (Task Manager OG)','Utilities','tmog.org',9,'url:https://tmog.org/',155,['utilities','free']],
+    ['VSCodium','Development','vscodium.com',9,'VSCodium.VSCodium',156,['developer','student','free']],
+    ['Neovim','Development','neovim.io',9,'Neovim.Neovim',157,['developer','free']],
+    ['Helix Editor','Development','helix-editor.com',9,'Helix.Helix',158,['developer','free']],
+    ['Filelight','Utilities','apps.kde.org/filelight',8,'KDE.Filelight',159,['essentials','free']],
+    ['Pear Desktop','Media','github.com/pear-devs/pear-desktop',8,'pear-devs.pear-desktop',160,['media','free']],
+    ['Twintail Launcher','Gaming','twintaillauncher.app',9,'TwintailTeam.TTL',161,['gaming','free']]
   ];
 
   for (const [name,category,domain,popular,windows,winIndex,tags] of extras) {
@@ -124,6 +130,12 @@
     if (apps.some(a=>a.key===key)) continue;
     const pkg={windows};
 
+    if(name==='VSCodium'){pkg.linux='com.vscodium.codium';pkg.mac={type:'cask',id:'vscodium'};}
+    if(name==='Neovim'){pkg.linux='io.neovim.nvim';pkg.mac={type:'formula',id:'neovim'};}
+    if(name==='Helix Editor'){pkg.linux='com.helix_editor.Helix';pkg.mac={type:'formula',id:'helix'};}
+    if(name==='Filelight'){pkg.linux='org.kde.filelight';}
+    if(name==='Pear Desktop'){pkg.linux='url:https://github.com/pear-devs/pear-desktop/releases/latest';pkg.mac={type:'cask',id:'pear-devs/pear/pear-desktop'};}
+    if(name==='Twintail Launcher'){pkg.linux='app.twintaillauncher.ttl';}
     if(name==='Parabolic'){pkg.linux='org.nickvision.tubeconverter';pkg.mac={type:'url',id:'https://github.com/NickvisionApps/Parabolic/releases'};}
     if(name==='Upscayl'){pkg.linux='org.upscayl.Upscayl';pkg.mac={type:'url',id:'https://github.com/upscayl/upscayl/releases'};}
     if(name==='LocalAI'){pkg.linux='url:https://localai.io/';pkg.mac={type:'url',id:'https://localai.io/'};}
@@ -159,7 +171,13 @@
       'LocalAI':'Run local AI APIs on your hardware. Installation requires platform-specific setup; opens official guide.',
       'Eden Emulator':'Open-source Nintendo Switch emulator. Choose the correct official build for your OS and architecture.',
       'Odysseus AI Workspace':'Self-hosted local-first AI workspace. Requires setup such as Docker and local/server models.',
-      'TMOG (Task Manager OG)':'Free cross-platform native task manager by Dave Plummer. Official downloads for Windows, Linux and macOS; optional paid Pro features.'
+      'TMOG (Task Manager OG)':'Free cross-platform native task manager by Dave Plummer. Official downloads for Windows, Linux and macOS; optional paid Pro features.',
+      'VSCodium':'Open-source telemetry-free VS Code-compatible editor. Linux version is a community Flatpak.',
+      'Neovim':'Powerful, configurable terminal editor. Linux Flatpak is community-maintained.',
+      'Helix Editor':'Modal terminal editor with tree-sitter and language-server features; Linux Flatpak is community-maintained.',
+      'Filelight':'KDE graphical disk-usage analyzer; explore folders and find files using the most space.',
+      'Pear Desktop':'Open-source YouTube Music desktop player with custom themes and plugins.',
+      'Twintail Launcher':'Anime game launcher for Genshin Impact, Honkai and more; game compatibility and anti-cheat restrictions still apply.'
     };
     apps.push({name,category,domain,popular,tags,pkg,winIndex,key,logo:fav(domain),desc:descriptions[name]||`${name} — install or open the official installer automatically.`});
   }
@@ -226,6 +244,12 @@
     desc:'Official RARLAB RAR archive tools for Linux and macOS. Command-line only; trial. Choose your platform on the official download page.'
   });
 
+  if(!apps.some(a=>a.key==='impression')) apps.push({
+    name:'Impression',key:'impression',category:'Utilities',domain:'apps.gnome.org/Impression',
+    popular:9,tags:['linux','free','utilities'],
+    pkg:{linux:'io.gitlab.adhami3310.Impression'},logo:fav('apps.gnome.org'),
+    desc:'Create bootable USB drives from ISO/disk images on Linux. Writing will erase selected USB drive data.'
+  });
   // Linux-only native package; do not assign a Windows installer index.
   if(!apps.some(a=>a.key==='wine')) apps.push({name:'Wine',key:'wine',category:'Utilities',domain:'winehq.org',popular:9,tags:['linux','gaming','developer','free'],pkg:{linux:'native:wine'},logo:fav('winehq.org'),desc:'Run compatible Windows applications on Linux using Wine.'});
 
