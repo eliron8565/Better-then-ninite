@@ -106,13 +106,21 @@
     ['SoundSwitch','Utilities','soundswitch.aaflalo.me',9,'AntoineAflalo.SoundSwitch',141,['essentials','free']],
     ['FilmCraft','Media','getartcraft.com',8,'url:https://getartcraft.com/apps/filmcraft',142,['creator','free']],
     ['XAMPP','Development','apachefriends.org',9,'url:https://www.apachefriends.org/download.html',143,['developer','student','free']],
-    ['OpenCode','Development','opencode.ai',9,'url:https://opencode.ai/',144,['developer','ai','free']]
+    ['OpenCode','Development','opencode.ai',9,'url:https://opencode.ai/',144,['developer','ai','free']],
+    // New Windows entries: never reuse existing selection indices (145/146 are security tools).
+    ['Zed','Development','zed.dev',9,'ZedIndustries.Zed',147,['developer','free']],
+    ['Kate','Development','kate-editor.org',9,'KDE.Kate',148,['developer','free']],
+    ['Apache NetBeans IDE','Development','netbeans.apache.org',9,'Apache.NetBeans',149,['developer','student','free']]
   ];
 
   for (const [name,category,domain,popular,windows,winIndex,tags] of extras) {
     const key=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
     if (apps.some(a=>a.key===key)) continue;
     const pkg={windows};
+    if(name==='LibreWolf'){pkg.linux='io.gitlab.librewolf-community';pkg.mac={type:'cask',id:'librewolf'};}
+    if(name==='Zed'){pkg.linux='dev.zed.Zed';pkg.mac={type:'cask',id:'zed'};}
+    if(name==='Kate'){pkg.linux='org.kde.kate';pkg.mac={type:'cask',id:'kate'};}
+    if(name==='Apache NetBeans IDE'){pkg.linux='org.apache.netbeans';pkg.mac={type:'cask',id:'netbeans'};}
     if(name==='Tor Browser'){pkg.linux='url:https://www.torproject.org/download/';pkg.mac={type:'url',id:'https://www.torproject.org/download/'};}
     if(name==='Waterfox'){pkg.linux='url:https://www.waterfox.net/download/';pkg.mac={type:'url',id:'https://www.waterfox.net/download/'};}
     if(name==='Mullvad VPN'){pkg.linux='url:https://mullvad.net/en/download/vpn/linux';pkg.mac={type:'url',id:'https://mullvad.net/en/download/vpn/macos'};}
@@ -126,7 +134,13 @@
     if(name==='Floorp'){pkg.linux='one.ablaze.floorp';pkg.mac={type:'cask',id:'floorp'};}
     if(name==='MCreator'){pkg.linux='url:https://mcreator.net/download';pkg.mac={type:'url',id:'https://mcreator.net/download'};}
     if(name==='Modrinth App'){pkg.linux='com.modrinth.ModrinthApp';pkg.mac={type:'cask',id:'modrinth-app'};}
-    apps.push({name,category,domain,popular,tags,pkg,winIndex,key,logo:fav(domain),desc:`${name} — install or open the official installer automatically.`});
+    const descriptions={
+      'LibreWolf':'Privacy-focused Firefox-based browser. Linux uses the LibreWolf Flathub package.',
+      'Zed':'Fast code editor. On Linux uses a community-packaged, unverified Flathub build.',
+      'Kate':'KDE advanced code editor with syntax highlighting, Git and terminal support.',
+      'Apache NetBeans IDE':'Java and multi-language IDE. Linux Flatpak is community-packaged and not verified by Apache.'
+    };
+    apps.push({name,category,domain,popular,tags,pkg,winIndex,key,logo:fav(domain),desc:descriptions[name]||`${name} — install or open the official installer automatically.`});
   }
 
   // Security assessment tools. Windows indexes are append-only to preserve installer bitsets.
@@ -199,6 +213,14 @@
   if(!apps.some(a=>a.key==='lf')) apps.push({name:"lf",key:'lf',category:'File Managers',domain:'github.com/gokcehan/lf',popular:8,tags:['linux','free','utilities'],pkg:{linux:'native:lf',mac:{type:'formula',id:'lf'}},logo:fav('github.com'),desc:'Free file manager for Linux.'});
   if(!apps.some(a=>a.key==='nemo')) apps.push({name:"Nemo",key:'nemo',category:'File Managers',domain:'github.com/linuxmint/nemo',popular:8,tags:['linux','free','utilities'],pkg:{linux:'native:nemo'},logo:fav('github.com'),desc:'Free file manager for Linux.'});
   if(!apps.some(a=>a.key==='superfile')) apps.push({name:"Superfile",key:'superfile',category:'File Managers',domain:'github.com/yorukot/superfile',popular:8,tags:['linux','free','utilities'],pkg:{linux:'url:https://github.com/yorukot/superfile#installation',mac:{type:'formula',id:'superfile'}},logo:fav('github.com'),desc:'Free file manager for Linux.'});
+
+  // Faugus is a Linux-native gaming launcher built on UMU/Proton (not a Windows/macOS app).
+  if(!apps.some(a=>a.key==='faugus-launcher')) apps.push({
+    name:'Faugus Launcher',key:'faugus-launcher',category:'Linux Gaming & Compatibility',
+    domain:'github.com/Faugus/faugus-launcher',popular:9,tags:['linux','gaming','free'],
+    pkg:{linux:'io.github.Faugus.faugus-launcher'},logo:fav('github.com'),
+    desc:'Launch supported Windows and Linux games with UMU/Proton. Does not bypass unsupported anti-cheat.'
+  });
 
   // Linux gaming and Windows-compatibility tools. No Windows installer indices.
   const linuxGamingTools=[
