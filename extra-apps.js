@@ -115,7 +115,8 @@
     ['Upscayl','Design & Imaging','upscayl.org',9,'Upscayl.Upscayl',151,['creator','ai','free']],
     ['LocalAI','AI & Local Models','localai.io',9,'url:https://localai.io/',152,['ai','developer','free']],
     ['Eden Emulator','Gaming','eden-emu.dev',9,'url:https://eden-emu.dev/downloads/',153,['gaming','free']],
-    ['Odysseus AI Workspace','AI & Local Models','odysseus-dev.github.io/odysseus/',8,'url:https://github.com/odysseus-dev/odysseus',154,['ai','developer','free']]
+    ['Odysseus AI Workspace','AI & Local Models','odysseus-dev.github.io/odysseus/',8,'url:https://github.com/odysseus-dev/odysseus',154,['ai','developer','free']],
+    ['TMOG (Task Manager OG)','Utilities','tmog.org',9,'url:https://tmog.org/',155,['utilities','free']]
   ];
 
   for (const [name,category,domain,popular,windows,winIndex,tags] of extras) {
@@ -134,6 +135,7 @@
     if(name==='Zed'){pkg.linux='dev.zed.Zed';pkg.mac={type:'cask',id:'zed'};}
     if(name==='Kate'){pkg.linux='org.kde.kate';pkg.mac={type:'cask',id:'kate'};}
     if(name==='Apache NetBeans IDE'){pkg.linux='org.apache.netbeans';pkg.mac={type:'cask',id:'netbeans'};}
+    if(name==='TMOG (Task Manager OG)'){pkg.linux='url:https://tmog.org/';pkg.mac={type:'url',id:'https://tmog.org/'};}
     if(name==='Tor Browser'){pkg.linux='url:https://www.torproject.org/download/';pkg.mac={type:'url',id:'https://www.torproject.org/download/'};}
     if(name==='Waterfox'){pkg.linux='url:https://www.waterfox.net/download/';pkg.mac={type:'url',id:'https://www.waterfox.net/download/'};}
     if(name==='Mullvad VPN'){pkg.linux='url:https://mullvad.net/en/download/vpn/linux';pkg.mac={type:'url',id:'https://mullvad.net/en/download/vpn/macos'};}
@@ -156,7 +158,8 @@
       'Upscayl':'Free open-source AI image upscaler with desktop builds for Windows, Linux and macOS.',
       'LocalAI':'Run local AI APIs on your hardware. Installation requires platform-specific setup; opens official guide.',
       'Eden Emulator':'Open-source Nintendo Switch emulator. Choose the correct official build for your OS and architecture.',
-      'Odysseus AI Workspace':'Self-hosted local-first AI workspace. Requires setup such as Docker and local/server models.'
+      'Odysseus AI Workspace':'Self-hosted local-first AI workspace. Requires setup such as Docker and local/server models.',
+      'TMOG (Task Manager OG)':'Free cross-platform native task manager by Dave Plummer. Official downloads for Windows, Linux and macOS; optional paid Pro features.'
     };
     apps.push({name,category,domain,popular,tags,pkg,winIndex,key,logo:fav(domain),desc:descriptions[name]||`${name} — install or open the official installer automatically.`});
   }
