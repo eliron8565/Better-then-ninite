@@ -122,7 +122,8 @@
     ['Helix Editor','Development','helix-editor.com',9,'Helix.Helix',158,['developer','free']],
     ['Filelight','Utilities','apps.kde.org/filelight',8,'KDE.Filelight',159,['essentials','free']],
     ['Pear Desktop','Media','github.com/pear-devs/pear-desktop',8,'pear-devs.pear-desktop',160,['media','free']],
-    ['Twintail Launcher','Gaming','twintaillauncher.app',9,'TwintailTeam.TTL',161,['gaming','free']]
+    ['Twintail Launcher','Gaming','twintaillauncher.app',9,'TwintailTeam.TTL',161,['gaming','free']],
+    ['ONLYOFFICE Desktop Editors','Documents & Office','onlyoffice.com',10,'ONLYOFFICE.DesktopEditors',162,['student','essentials','free']]
   ];
 
   for (const [name,category,domain,popular,windows,winIndex,tags] of extras) {
@@ -130,6 +131,7 @@
     if (apps.some(a=>a.key===key)) continue;
     const pkg={windows};
 
+    if(name==='ONLYOFFICE Desktop Editors'){pkg.linux='org.onlyoffice.desktopeditors';pkg.mac={type:'cask',id:'onlyoffice'};}
     if(name==='VSCodium'){pkg.linux='com.vscodium.codium';pkg.mac={type:'cask',id:'vscodium'};}
     if(name==='Neovim'){pkg.linux='io.neovim.nvim';pkg.mac={type:'formula',id:'neovim'};}
     if(name==='Helix Editor'){pkg.linux='com.helix_editor.Helix';pkg.mac={type:'formula',id:'helix'};}
@@ -302,6 +304,18 @@
   for(const tool of linuxGamingTools){
     if(apps.some(a=>a.key===tool.key))continue;
     apps.push({name:tool.name,key:tool.key,category:'Linux Gaming & Compatibility',domain:tool.domain,popular:9,tags:['linux','gaming','free'],pkg:{linux:tool.linux},logo:fav(tool.domain),desc:tool.desc});
+  }
+  // Linux audio, Roblox and music applications. No fabricated Windows installer entries.
+  const newLinuxApps=[
+    {name:'JamesDSP',key:'jamesdsp',category:'Audio & Sound',domain:'github.com/Audio4Linux/JDSP4Linux',linux:'me.timschneeberger.jdsp4linux',tags:['linux','audio','free'],desc:'PipeWire audio effects, EQ, reverb and DSP for Linux. Requires PipeWire; PulseAudio users need the separate legacy build.'},
+    {name:'EasyEffects',key:'easyeffects',category:'Audio & Sound',domain:'github.com/wwmm/easyeffects',linux:'com.github.wwmm.easyeffects',tags:['linux','audio','free'],desc:'PipeWire system-wide audio equalizer, compressor and microphone effects.'},
+    {name:'Sober',key:'sober',category:'Linux Gaming & Compatibility',domain:'sober.vinegarhq.org',linux:'org.vinegarhq.Sober',tags:['linux','gaming'],desc:'Community Roblox compatibility port for Linux (proprietary, unofficial). Roblox updates may break it; use at your own risk.'},
+    {name:'Spun',key:'spun',category:'Media',domain:'github.com/yappologistic/Spun',linux:'url:https://github.com/yappologistic/Spun#install',tags:['linux','media'],desc:'Linux music player with CD, vinyl and cassette views. Source build only (Qt 6.8+ / TagLib 2.0+); source-available under noncommercial license, not an automatic install.'}
+  ];
+  for(const app of newLinuxApps){
+    if(apps.some(a=>a.key===app.key))continue;
+    apps.push({name:app.name,key:app.key,category:app.category,domain:app.domain,popular:9,
+      tags:app.tags,pkg:{linux:app.linux},logo:fav(app.domain),desc:app.desc});
   }
   const browserGroups = {
     'Google Chrome':'Popular Browsers','Mozilla Firefox':'Popular Browsers','Microsoft Edge':'Popular Browsers',
