@@ -37,6 +37,11 @@ CATALOG={
 'keepassxc':('KeePassXC','org.keepassxc.KeePassXC','keepassxc'),
 'rustdesk':('RustDesk','com.rustdesk.RustDesk','rustdesk'),
 'floorp':('Floorp','one.ablaze.floorp','floorp'),
+'librewolf':('LibreWolf','io.gitlab.librewolf-community','librewolf'),
+'faugus-launcher':('Faugus Launcher','io.github.Faugus.faugus-launcher',None),
+'zed':('Zed','dev.zed.Zed','zed'),
+'kate':('Kate','org.kde.kate','kate'),
+'apache-netbeans-ide':('Apache NetBeans IDE','org.apache.netbeans','netbeans'),
 }
 
 # Packages supported by the graphical Linux installer (other packages use the website command generator).
