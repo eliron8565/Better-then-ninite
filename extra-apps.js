@@ -117,6 +117,7 @@
     if(name==='Waterfox'){pkg.linux='url:https://www.waterfox.net/download/';pkg.mac={type:'url',id:'https://www.waterfox.net/download/'};}
     if(name==='Mullvad VPN'){pkg.linux='url:https://mullvad.net/en/download/vpn/linux';pkg.mac={type:'url',id:'https://mullvad.net/en/download/vpn/macos'};}
     if(name==='Wireshark'){pkg.linux='url:https://www.wireshark.org/download.html';pkg.mac={type:'cask',id:'wireshark'};}
+    if(name==='Nmap'){pkg.linux='native:nmap';pkg.mac={type:'formula',id:'nmap'};}
     if(name==='Zen Browser'){pkg.linux='app.zen_browser.zen';pkg.mac={type:'cask',id:'zen'};}
     if(name==='Proton VPN'){pkg.linux='url:https://protonvpn.com/support/official-linux-vpn';pkg.mac={type:'url',id:'https://protonvpn.com/download-macos'};}
     if(name==='OpenCode'){pkg.linux='url:https://opencode.ai/';pkg.mac={type:'url',id:'https://opencode.ai/'};}
@@ -127,6 +128,33 @@
     if(name==='Modrinth App'){pkg.linux='com.modrinth.ModrinthApp';pkg.mac={type:'cask',id:'modrinth-app'};}
     apps.push({name,category,domain,popular,tags,pkg,winIndex,key,logo:fav(domain),desc:`${name} — install or open the official installer automatically.`});
   }
+
+  // Security assessment tools. Windows indexes are append-only to preserve installer bitsets.
+  // On Windows Metasploit and John open their official download pages for manual installation.
+  if(!apps.some(a=>a.key==='metasploit-framework')) apps.push({
+    name:'Metasploit Framework',key:'metasploit-framework',category:'Security',domain:'metasploit.com',popular:9,
+    tags:['security','developer','student','free'],
+    winIndex:145,
+    pkg:{
+      windows:'url:https://docs.metasploit.com/docs/using-metasploit/getting-started/nightly-installers.html',
+      linux:'url:https://docs.metasploit.com/docs/using-metasploit/getting-started/nightly-installers.html',
+      mac:{type:'url',id:'https://docs.metasploit.com/docs/using-metasploit/getting-started/nightly-installers.html'}
+    },
+    logo:fav('metasploit.com'),
+    desc:'Open-source penetration-testing framework. Official setup instructions; manual installation required.'
+  });
+  if(!apps.some(a=>a.key==='john-the-ripper')) apps.push({
+    name:'John the Ripper',key:'john-the-ripper',category:'Security',domain:'openwall.com/john',popular:9,
+    tags:['security','developer','student','free'],
+    winIndex:146,
+    pkg:{
+      windows:'url:https://www.openwall.com/john/',
+      linux:'native:john-the-ripper',
+      mac:{type:'formula',id:'john-jumbo'}
+    },
+    logo:fav('openwall.com'),
+    desc:'Offline password-strength auditing tool; packages on Linux, Homebrew on macOS, official Windows downloads.'
+  });
 
   // Linux-only native package; do not assign a Windows installer index.
   if(!apps.some(a=>a.key==='wine')) apps.push({name:'Wine',key:'wine',category:'Utilities',domain:'winehq.org',popular:9,tags:['linux','gaming','developer','free'],pkg:{linux:'native:wine'},logo:fav('winehq.org'),desc:'Run compatible Windows applications on Linux using Wine.'});
