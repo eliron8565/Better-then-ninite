@@ -72,7 +72,8 @@ MANUAL_APPS={
   'localai':('LocalAI','https://localai.io/',{'linux','darwin'}),
   'eden-emulator':('Eden Emulator','https://eden-emu.dev/downloads/',{'linux','darwin'}),
   'odysseus-ai-workspace':('Odysseus AI Workspace','https://github.com/odysseus-dev/odysseus',{'linux','darwin'}),
-  'coolercontrol':('CoolerControl','https://docs.coolercontrol.org/installation/',{'linux'})
+  'coolercontrol':('CoolerControl','https://docs.coolercontrol.org/installation/',{'linux'}),
+  'tmog-task-manager-og':('TMOG (Task Manager OG)','https://tmog.org/',{'linux','darwin'})
 }
 
 def selection_source():
