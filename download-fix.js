@@ -28,6 +28,10 @@
   async function downloadMac(chosen){if(typeof JSZip==='undefined')throw new Error('macOS packager did not load. Refresh and try again.');const r=await fetchFile('downloads/AppForge-macOS.zip');const zip=await JSZip.loadAsync(await r.arrayBuffer());const entry=zip.file('AppForge.app/Contents/MacOS/AppForge');if(!entry)throw new Error('macOS app package is invalid.');const binary=await entry.async('uint8array');const marker=new TextEncoder().encode(`${KEY_MARKER}${chosen.map(a=>a.key).join(',')}:END\n`);const combined=new Uint8Array(binary.length+marker.length);combined.set(binary);combined.set(marker,binary.length);zip.file('AppForge.app/Contents/MacOS/AppForge',combined,{binary:true,unixPermissions:0o755});saveBlob(await zip.generateAsync({type:'blob',platform:'UNIX',compression:'DEFLATE'}),'AppForge-macOS.zip')}
 
   const linuxNative = {
+    // Native packages where commonly available; Flatpak handles other distributions.
+    'neovim':{apt:'neovim',dnf:'neovim',pacman:'neovim',zypper:'neovim'},
+    'helix-editor':{dnf:'helix',pacman:'helix',zypper:'helix'},
+    'filelight':{apt:'filelight',dnf:'filelight',pacman:'filelight',zypper:'filelight'},
     'nmap':{apt:'nmap',dnf:'nmap',pacman:'nmap',zypper:'nmap'},
     'john-the-ripper':{apt:'john',dnf:'john',pacman:'john',zypper:'john'},
 
@@ -76,11 +80,11 @@
     const chosenManager=document.querySelector('#linuxPackageManager')?.value||'auto';
     const managerBin={apt:'apt-get',dnf:'dnf',pacman:'pacman',zypper:'zypper',apk:'apk',xbps:'xbps-install',emerge:'emerge',eopkg:'eopkg',nix:'nix'};
     const nativeExtra={
-      apk:{'nmap':'nmap','john-the-ripper':'john','wine':'wine','vim':'vim','git':'git','python-3':'python3','gnome-files':'nautilus','midnight-commander':'mc','ranger':'ranger','thunar':'thunar','pcmanfm':'pcmanfm','vifm':'vifm','nemo':'nemo','dolphin':'dolphin','lutris':'lutris','gamemode':'gamemode','mangohud':'mangohud','winetricks':'winetricks'},
-      xbps:{'nmap':'nmap','john-the-ripper':'john','wine':'wine','vim':'vim','git':'git','python-3':'python3','gnome-files':'nautilus','midnight-commander':'mc','ranger':'ranger','thunar':'thunar','pcmanfm':'pcmanfm','vifm':'vifm','nemo':'nemo','dolphin':'dolphin','lutris':'lutris','gamemode':'gamemode','mangohud':'mangohud','winetricks':'winetricks'},
-      emerge:{'nmap':'net-analyzer/nmap','john-the-ripper':'app-crypt/johntheripper','wine':'app-emulation/wine-vanilla','vim':'app-editors/vim','git':'dev-vcs/git','python-3':'dev-lang/python','gnome-files':'gnome-base/nautilus','midnight-commander':'app-misc/mc','ranger':'app-misc/ranger','thunar':'xfce-base/thunar','dolphin':'kde-apps/dolphin','lutris':'games-util/lutris','gamemode':'games-util/gamemode','mangohud':'games-util/mangohud','winetricks':'app-emulation/winetricks'},
+      apk:{'neovim':'neovim','filelight':'filelight','nmap':'nmap','john-the-ripper':'john','wine':'wine','vim':'vim','git':'git','python-3':'python3','gnome-files':'nautilus','midnight-commander':'mc','ranger':'ranger','thunar':'thunar','pcmanfm':'pcmanfm','vifm':'vifm','nemo':'nemo','dolphin':'dolphin','lutris':'lutris','gamemode':'gamemode','mangohud':'mangohud','winetricks':'winetricks'},
+      xbps:{'neovim':'neovim','filelight':'filelight','nmap':'nmap','john-the-ripper':'john','wine':'wine','vim':'vim','git':'git','python-3':'python3','gnome-files':'nautilus','midnight-commander':'mc','ranger':'ranger','thunar':'thunar','pcmanfm':'pcmanfm','vifm':'vifm','nemo':'nemo','dolphin':'dolphin','lutris':'lutris','gamemode':'gamemode','mangohud':'mangohud','winetricks':'winetricks'},
+      emerge:{'neovim':'app-editors/neovim','filelight':'kde-apps/filelight','nmap':'net-analyzer/nmap','john-the-ripper':'app-crypt/johntheripper','wine':'app-emulation/wine-vanilla','vim':'app-editors/vim','git':'dev-vcs/git','python-3':'dev-lang/python','gnome-files':'gnome-base/nautilus','midnight-commander':'app-misc/mc','ranger':'app-misc/ranger','thunar':'xfce-base/thunar','dolphin':'kde-apps/dolphin','lutris':'games-util/lutris','gamemode':'games-util/gamemode','mangohud':'games-util/mangohud','winetricks':'app-emulation/winetricks'},
       eopkg:{'nmap':'nmap','wine':'wine','vim':'vim','git':'git','python-3':'python3','gnome-files':'nautilus','midnight-commander':'mc','ranger':'ranger','thunar':'thunar','dolphin':'dolphin','lutris':'lutris'},
-      nix:{'nmap':'nmap','john-the-ripper':'john','wine':'wine','vim':'vim','git':'git','python-3':'python3','gnome-files':'nautilus','midnight-commander':'mc','ranger':'ranger','thunar':'xfce.thunar','dolphin':'kdePackages.dolphin','gamemode':'gamemode','mangohud':'mangohud','winetricks':'winetricks','lutris':'lutris'}
+      nix:{'neovim':'neovim','helix-editor':'helix','filelight':'kdePackages.filelight','nmap':'nmap','john-the-ripper':'john','wine':'wine','vim':'vim','git':'git','python-3':'python3','gnome-files':'nautilus','midnight-commander':'mc','ranger':'ranger','thunar':'xfce.thunar','dolphin':'kdePackages.dolphin','gamemode':'gamemode','mangohud':'mangohud','winetricks':'winetricks','lutris':'lutris'}
     };
     const managers=Object.keys(managerBin);
     const shell=v=>"'"+String(v).replace(/'/g,"'\\''")+"'";
