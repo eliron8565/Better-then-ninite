@@ -89,6 +89,25 @@ jobs:
           $p=Start-Process -FilePath $exe -ArgumentList '--self-test' -Wait -PassThru
           if($p.ExitCode -ne 0){throw "AppForge runtime self-test failed: exit $($p.ExitCode)"}
 
+      - name: Verify personalized EXE decodes selected apps without installing
+        shell: pwsh
+        run: |
+          $cases = @('0','163','6,11,20,30,163','30,100','0,1,2,3,4,5,6,7,8,9')
+          foreach($caseCsv in $cases){
+            [byte[]]$bits = New-Object byte[] 21
+            foreach($idText in $caseCsv.Split(',')){
+              $id = [int]$idText
+              $bits[[int][math]::Floor($id / 8)] = $bits[[int][math]::Floor($id / 8)] -bor (1 -shl ($id % 8))
+            }
+            $token = [Convert]::ToBase64String($bits).TrimEnd('=').Replace('+','-').Replace('/','_')
+            $exe = Join-Path $env:RUNNER_TEMP "AppForge-$token.exe"
+            Copy-Item 'publish/AppForge.exe' $exe -Force
+            $process = Start-Process -FilePath $exe -ArgumentList "--verify-selection=$caseCsv" -Wait -PassThru
+            if($process.ExitCode -ne 0){throw "Selection round-trip failed: $caseCsv ($($process.ExitCode))"}
+            Remove-Item $exe -Force
+          }
+          Write-Host 'All personalized filename selection tests passed.'
+
       - name: Publish latest Windows release asset
         shell: bash
         env: { GH_TOKEN: '${{ github.token }}' }
