@@ -113,10 +113,12 @@ function renderApps(){
   const catalog = $('#catalog'); if(!catalog) return;
   const q = ($('#searchInput')?.value || '').trim().toLowerCase();
   let list = availableApps().filter(app => (activeCategory==='all'||app.category===activeCategory) && (!q || `${app.name} ${app.category} ${app.desc}`.toLowerCase().includes(q)));
+  const installFilter = platform==='windows' ? ($('#installModeFilter')?.value || 'all') : 'all';
+  if (installFilter !== 'all') list = list.filter(app => (String(app.pkg.windows).startsWith('url:https://') ? 'manual' : 'automatic') === installFilter);
   const sort = $('#sortSelect')?.value || 'popular';
   list.sort((a,b)=> sort==='name' ? a.name.localeCompare(b.name) : sort==='category' ? a.category.localeCompare(b.category)||a.name.localeCompare(b.name) : b.popular-a.popular||a.name.localeCompare(b.name));
   $('#emptyState')?.classList.toggle('hidden', list.length > 0);
-  catalog.innerHTML = list.map(app => `<label class="app-row ${selected.has(app.key)?'selected':''}"><input type="checkbox" data-key="${app.key}" ${selected.has(app.key)?'checked':''}><span class="app-icon">${logoMarkup(app)}</span><span class="app-info"><strong>${app.name}</strong><small>${app.desc}</small></span><span class="app-category">${app.category}</span>${app.popular>=9?'<span class="popular-badge">Popular</span>':''}<span class="select-indicator">✓</span></label>`).join('');
+  catalog.innerHTML = list.map(app => `<label class="app-row ${selected.has(app.key)?'selected':''}"><input type="checkbox" data-key="${app.key}" ${selected.has(app.key)?'checked':''}><span class="app-icon">${logoMarkup(app)}</span><span class="app-info"><strong>${app.name}</strong><small>${app.desc}</small></span><span class="app-category">${app.category}</span>${platform==='windows'?(String(app.pkg.windows).startsWith('url:https://')?'<span class="catalog-install-badge manual">Manual setup</span>':'<span class="catalog-install-badge automatic">Auto install</span>'):''}${app.popular>=9?'<span class="popular-badge">Popular</span>':''}<span class="select-indicator">✓</span></label>`).join('');
   $$('#catalog input[type=checkbox]').forEach(input => input.addEventListener('change', () => { selected.has(input.dataset.key) ? selected.delete(input.dataset.key) : selected.add(input.dataset.key); saveSelection(); renderApps(); updateSelectionBar(); }));
 }
 function updateSelectionBar(){
@@ -128,6 +130,7 @@ function updateSelectionBar(){
 function updatePlatformUI(){
   $$('.platform-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.platform===platform));
   setText('#platformBadge', platformNames[platform]); setText('#catalogEyebrow', `${platformNames[platform]} catalog`); setText('#appTotal', availableApps().length); setText('#allCount', availableApps().length);
+  $('#installModeWrap')?.classList.toggle('hidden',platform!=='windows');
   activeCategory='all'; setText('#catalogTitle','All apps'); renderNav(); renderApps(); updateSelectionBar();
 }
 function applyPreset(tag){ availableApps().filter(app=>app.tags.includes(tag)).forEach(app=>selected.add(app.key)); saveSelection(); renderApps(); updateSelectionBar(); }
@@ -161,7 +164,7 @@ function reviewBundle(){
 $$('.platform-btn').forEach(btn=>btn.addEventListener('click',()=>{platform=btn.dataset.platform;localStorage.setItem('appforge-platform',platform);updatePlatformUI();}));
 $$('.preset-btn[data-preset]').forEach(btn=>btn.addEventListener('click',()=>applyPreset(btn.dataset.preset)));
 $('#clearSelection')?.addEventListener('click',()=>{selected.clear();saveSelection();renderApps();updateSelectionBar();});
-$('#searchInput')?.addEventListener('input',renderApps); $('#sortSelect')?.addEventListener('change',renderApps); $('#reviewButton')?.addEventListener('click',reviewBundle); $('#dialogClose')?.addEventListener('click',()=>$('#reviewDialog')?.close()); $('#downloadScript')?.addEventListener('click',downloadInstaller);
+$('#searchInput')?.addEventListener('input',renderApps); $('#sortSelect')?.addEventListener('change',renderApps); $('#installModeFilter')?.addEventListener('change',renderApps); $('#reviewButton')?.addEventListener('click',reviewBundle); $('#dialogClose')?.addEventListener('click',()=>$('#reviewDialog')?.close()); $('#downloadScript')?.addEventListener('click',downloadInstaller);
 $('#themeToggle')?.addEventListener('click',()=>{document.body.classList.toggle('light');localStorage.setItem('appforge-theme',document.body.classList.contains('light')?'light':'dark');});
 $$('[data-jump-category]').forEach(btn=>btn.addEventListener('click',()=>{ if(platform!=='windows'){platform='windows';localStorage.setItem('appforge-platform',platform);} activeCategory=btn.dataset.jumpCategory; setText('#catalogTitle',activeCategory); $$('.platform-btn').forEach(b=>b.classList.toggle('active',b.dataset.platform===platform)); setText('#platformBadge',platformNames[platform]); setText('#catalogEyebrow',`${platformNames[platform]} catalog`); setText('#appTotal',availableApps().length); setText('#allCount',availableApps().length); renderNav(); renderApps(); document.querySelector('#apps-section')?.scrollIntoView({behavior:'smooth'}); }));
 if(localStorage.getItem('appforge-theme')==='light') document.body.classList.add('light');
