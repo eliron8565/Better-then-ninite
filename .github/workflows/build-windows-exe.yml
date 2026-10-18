@@ -82,6 +82,13 @@ jobs:
           $stream=[IO.File]::OpenRead($file); try{$a=$stream.ReadByte();$b=$stream.ReadByte()}finally{$stream.Dispose()}; if($a-ne 0x4D-or $b-ne 0x5A){throw 'Invalid MZ header'}
           Copy-Item $file publish/AppForge-Windows.exe -Force; (Get-FileHash $file -Algorithm SHA256).Hash|Set-Content -NoNewline publish/AppForge-Windows.exe.sha256
 
+      - name: Smoke-test EXE launches on Windows without installing apps
+        shell: pwsh
+        run: |
+          $exe=(Resolve-Path 'publish/AppForge.exe').Path
+          $p=Start-Process -FilePath $exe -ArgumentList '--self-test' -Wait -PassThru
+          if($p.ExitCode -ne 0){throw "AppForge runtime self-test failed: exit $($p.ExitCode)"}
+
       - name: Publish latest Windows release asset
         shell: bash
         env: { GH_TOKEN: '${{ github.token }}' }
