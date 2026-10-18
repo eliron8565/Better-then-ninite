@@ -64,28 +64,29 @@ A(0,"Google Chrome","Google.Chrome"),A(1,"Mozilla Firefox","Mozilla.Firefox"),A(
     // Never use this diagnostic mode to install arbitrary package IDs.
     public static async Task<int> RealInstallSmoke(){
         if(Environment.GetEnvironmentVariable("APPFORGE_CI_REAL_INSTALL")!="YES")return 80;
-        var app=Catalog.Single(a=>a.Index==158 && a.PackageId=="Helix.Helix");
+        // Two different real third-party installs in sequence on a disposable CI machine.
+        var candidates=new[]{(Index:158,Id:"Helix.Helix"),(Index:41,Id:"Giorgiotani.Peazip")};
         try{
             var version=await Capture("winget","--version");
             if(version.ExitCode!=0){Console.Error.WriteLine("Winget unavailable: "+TrimError(version.Output));return 81;}
-            var before=await Capture("winget",$"list --id \"{PackageCode(app)}\" -e{PackageSource(app)} --accept-source-agreements --disable-interactivity");
-            if(LooksInstalled(before.Output,PackageCode(app))){
-                Console.Error.WriteLine("Helix is already installed on this runner; cannot certify a fresh installation.");
-                return 82;
+            foreach(var (index,id) in candidates){
+                var app=Catalog.Single(a=>a.Index==index && a.PackageId==id);
+                var before=await Capture("winget",$"list --id \"{PackageCode(app)}\" -e{PackageSource(app)} --accept-source-agreements --disable-interactivity");
+                if(LooksInstalled(before.Output,PackageCode(app))){
+                    Console.Error.WriteLine(id+" is already installed on this runner; cannot certify a fresh installation.");
+                    return 82;
+                }
+                if(before.ExitCode!=0 && !NoInstalledMatch(before.Output)){
+                    Console.Error.WriteLine(id+" preflight failed: "+TrimError(before.Output));return 83;
+                }
+                var install=await Capture("winget",WingetArgs(app,"install"));
+                if(install.ExitCode!=0){
+                    Console.Error.WriteLine(id+" install returned "+install.ExitCode+": "+TrimError(install.Output));return 84;
+                }
+                await VerifyPackagePresent(app);
+                Console.WriteLine("REAL INSTALL VERIFIED: "+id+" (Winget install plus installed-list verification).");
             }
-            if(before.ExitCode!=0 && !NoInstalledMatch(before.Output)){
-                Console.Error.WriteLine("Winget preflight failed: "+TrimError(before.Output));return 83;
-            }
-            var install=await Capture("winget",WingetArgs(app,"install"));
-            if(install.ExitCode!=0){
-                Console.Error.WriteLine("Real install returned "+install.ExitCode+": "+TrimError(install.Output));return 84;
-            }
-            var after=await Capture("winget",$"list --id \"{PackageCode(app)}\" -e{PackageSource(app)} --accept-source-agreements --disable-interactivity");
-            if(after.ExitCode!=0||!LooksInstalled(after.Output,PackageCode(app))){
-                Console.Error.WriteLine("Winget returned success but app was not verifiably installed: "+TrimError(after.Output));
-                return 85;
-            }
-            Console.WriteLine("REAL INSTALL VERIFIED: Helix.Helix (Winget install exit 0 plus post-install list).");
+            Console.WriteLine("PASS: Both selected third-party apps installed in sequence. No preinstalled package was counted.");
             return 0;
         }catch(Exception ex){Console.Error.WriteLine("Real install test failed: "+ex);return 86;}
     }
