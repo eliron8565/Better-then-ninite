@@ -7,7 +7,7 @@ namespace AppForgeInstaller;
 
 internal static class Program
 {
-    [STAThread] static int Main(string[] args) { if(args.Length==1 && args[0]=="--self-test") return MainForm.SelfTest(); ApplicationConfiguration.Initialize(); Application.Run(new MainForm()); return 0; }
+    [STAThread] static int Main(string[] args) { if(args.Length==1 && args[0]=="--self-test") return MainForm.SelfTest(); if(args.Length==1 && args[0].StartsWith("--verify-selection=",StringComparison.Ordinal))return MainForm.VerifySelection(args[0]["--verify-selection=".Length..]); ApplicationConfiguration.Initialize(); Application.Run(new MainForm()); return 0; }
 }
 
 internal sealed record AppItem(int Index, string Name, string PackageId);
@@ -31,6 +31,15 @@ A(0,"Google Chrome","Google.Chrome"),A(1,"Mozilla Firefox","Mozilla.Firefox"),A(
         return 0;
     }
 
+    public static int VerifySelection(string expectedCsv){
+        var expected=new HashSet<int>();
+        foreach(var raw in expectedCsv.Split(',',StringSplitOptions.RemoveEmptyEntries)){
+            if(!int.TryParse(raw,out int index)||index<0||index>167)return 20;
+            expected.Add(index);
+        }
+        return expected.Count>0 && ReadSelection().Select(x=>x.Index).ToHashSet().SetEquals(expected) ? 0 : 21;
+    }
+
     public MainForm(){selected=ReadSelection(); base.Text="AppForge";StartPosition=FormStartPosition.CenterScreen;Size=new Size(760,620);MinimumSize=new Size(680,500);BackColor=bg;ForeColor=text;Font=new Font("Segoe UI",10);try{Icon=Icon.ExtractAssociatedIcon(Application.ExecutablePath);}catch{} BuildUi();Shown+=async(_,_)=>await StartAutomatically();}
 
     void BuildUi(){
@@ -49,21 +58,81 @@ A(0,"Google Chrome","Google.Chrome"),A(1,"Mozilla Firefox","Mozilla.Firefox"),A(
     void ToggleDetails(){detailsVisible=!detailsVisible;rows.Parent!.Visible=detailsVisible;details.Text=detailsVisible?"Hide details":"Show details";}
 
     async Task StartAutomatically(){if(selected.Count==0){cancel.Visible=false;return;}await RunAsync(false);}
-    async Task RunAsync(bool failedOnly){cts=new();errors.Clear();cancel.Visible=true;retry.Visible=false;close.Visible=false;headline.Text="Installing and updating your apps";status.Text="Checking selected apps…";var targets=failedOnly?selected.Where(a=>state[a.Index].Text.StartsWith("Failed")).ToList():selected;overall.Maximum=Math.Max(1,targets.Count);overall.Value=0;int done=0,ok=0,skipped=0,failed=0,manual=0;
-        foreach(var a in targets){if(cts.IsCancellationRequested)break;try{
-            if(a.PackageId.StartsWith("url:")){Set(a,0,"Opening official download…",yellow);Process.Start(new ProcessStartInfo(a.PackageId[4..]){UseShellExecute=true});Set(a,100,"Official download opened",green);manual++;}
-            else{Set(a,0,"Checking…",muted);var listed=await Capture("winget",$"list --id \"{a.PackageId}\" -e --accept-source-agreements --disable-interactivity");bool installed=LooksInstalled(listed);if(installed){var up=await Capture("winget",$"upgrade --id \"{a.PackageId}\" -e --accept-source-agreements --disable-interactivity");if(!HasUpgrade(up)){Set(a,100,"Skipped (up to date)",green);skipped++;goto Next;}Set(a,0,"Downloading update…",cyan);int code=await Winget(a,"upgrade",cts.Token);if(code==0){Set(a,100,"OK — updated",green);ok++;}else throw new Exception($"winget exit code {code}");}
-                else{Set(a,0,"Downloading…",cyan);int code=await Winget(a,"install",cts.Token);if(code==0){Set(a,100,"OK — installed",green);ok++;}else throw new Exception($"winget exit code {code}");}}
-        }catch(OperationCanceledException){Set(a,progress[a.Index].Value,"Cancelled",yellow);break;}catch(Exception ex){errors[a.Index]=ex.Message;Set(a,progress[a.Index].Value,"Failed",red);failed++;}
-        Next: done++;overall.Value=Math.Min(overall.Maximum,done);count.Text=$"{done} / {targets.Count}";}
-        cancel.Visible=false;retry.Visible=failed>0;close.Visible=true;headline.Text=cts.IsCancellationRequested?"Installation cancelled":failed>0?"Finished with some errors":"All done";status.Text=$"{ok} completed • {skipped} already up to date • {manual} manual • {failed} failed";WriteLog(status.Text);
+    async Task RunAsync(bool failedOnly){
+        cts=new();errors.Clear();cancel.Visible=true;retry.Visible=false;close.Visible=false;
+        headline.Text="Installing and updating your apps";status.Text="Checking selected apps…";
+        var targets=failedOnly?selected.Where(a=>state[a.Index].Text.StartsWith("Failed")).ToList():selected;
+        overall.Maximum=Math.Max(1,targets.Count);overall.Value=0;
+        int done=0,ok=0,skipped=0,failed=0,manual=0;
+        string? wingetError=null;
+        if(targets.Any(a=>!a.PackageId.StartsWith("url:",StringComparison.OrdinalIgnoreCase))){
+            try{
+                var version=await Capture("winget","--version");
+                if(version.ExitCode!=0 || string.IsNullOrWhiteSpace(version.Output))
+                    wingetError="Winget could not start. Install/update Microsoft App Installer from the Microsoft Store.";
+            }catch(Exception){
+                wingetError="Winget is not available yet. Install/update Microsoft App Installer from the Microsoft Store, then retry failed apps.";
+            }
+            if(wingetError!=null)MessageBox.Show(this,wingetError,"AppForge — Winget required",MessageBoxButtons.OK,MessageBoxIcon.Warning);
+        }
+        foreach(var a in targets){
+            if(cts.IsCancellationRequested)break;
+            try{
+                if(a.PackageId.StartsWith("url:",StringComparison.OrdinalIgnoreCase)){
+                    Set(a,0,"Manual setup — opening vendor page",yellow);
+                    Process.Start(new ProcessStartInfo(a.PackageId[4..]){UseShellExecute=true});
+                    Set(a,0,"Manual installation required",yellow);
+                    manual++;
+                }else{
+                    if(wingetError!=null)throw new InvalidOperationException(wingetError);
+                    Set(a,0,"Checking installed apps…",muted);
+                    var listed=await Capture("winget",$"list --id \"{a.PackageId}\" -e --accept-source-agreements --disable-interactivity");
+                    if(listed.ExitCode!=0 && !NoInstalledMatch(listed.Output))
+                        throw new Exception($"Winget list failed ({listed.ExitCode}). {TrimError(listed.Output)}");
+                    bool installed=LooksInstalled(listed.Output,a.PackageId);
+                    if(installed){
+                        var up=await Capture("winget",$"upgrade --id \"{a.PackageId}\" -e --accept-source-agreements --disable-interactivity");
+                        if(up.ExitCode!=0 && !NoUpgrade(up.Output))
+                            throw new Exception($"Winget upgrade check failed ({up.ExitCode}). {TrimError(up.Output)}");
+                        if(!HasUpgrade(up.Output,a.PackageId)){
+                            Set(a,100,"Skipped (up to date)",green);skipped++;goto Next;
+                        }
+                        Set(a,0,"Downloading update…",cyan);
+                        int code=await Winget(a,"upgrade",cts.Token);
+                        if(code==0){Set(a,100,"OK — updated",green);ok++;}
+                        else throw new Exception($"Winget upgrade failed: exit code {code}");
+                    }else{
+                        Set(a,0,"Downloading…",cyan);
+                        int code=await Winget(a,"install",cts.Token);
+                        if(code==0){Set(a,100,"OK — installed (Winget)",green);ok++;}
+                        else throw new Exception($"Winget installation failed: exit code {code}");
+                    }
+                }
+            }catch(OperationCanceledException){Set(a,progress[a.Index].Value,"Cancelled",yellow);break;}
+             catch(Exception ex){errors[a.Index]=ex.Message;Set(a,progress[a.Index].Value,"Failed — see log",red);WriteLog($"{a.Name} ({a.PackageId}): {ex}");failed++;}
+            Next: done++;overall.Value=Math.Min(overall.Maximum,done);count.Text=$"{done} / {targets.Count}";
+        }
+        cancel.Visible=false;retry.Visible=failed>0;close.Visible=true;
+        headline.Text=cts.IsCancellationRequested?"Installation cancelled":failed>0?"Finished with errors":manual>0?"Finished — manual steps remain":"All done";
+        status.Text=$"{ok} installed/updated • {skipped} up to date • {manual} manual setup • {failed} failed";
+        WriteLog(status.Text);
     }
     async Task<int> Winget(AppItem a,string verb,CancellationToken token){var psi=new ProcessStartInfo("winget",$"{verb} --id \"{a.PackageId}\" -e --silent --accept-package-agreements --accept-source-agreements --disable-interactivity"){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true,StandardOutputEncoding=Encoding.UTF8,StandardErrorEncoding=Encoding.UTF8};using var p=new Process{StartInfo=psi};active=p;p.Start();var o=ReadProgress(p.StandardOutput,a,token);var e=ReadProgress(p.StandardError,a,token);await p.WaitForExitAsync(token);await Task.WhenAll(o,e);return p.ExitCode;}
     async Task ReadProgress(StreamReader r,AppItem a,CancellationToken t){while(!r.EndOfStream&&!t.IsCancellationRequested){var x=await r.ReadLineAsync(t);if(string.IsNullOrWhiteSpace(x))continue;var m=PercentRx.Match(x);if(m.Success&&int.TryParse(m.Groups[1].Value,out var n))BeginInvoke(()=>Set(a,n,$"Downloading {n}%",cyan));else if(x.Contains("Installing",StringComparison.OrdinalIgnoreCase))BeginInvoke(()=>Set(a,Math.Max(5,progress[a.Index].Value),"Installing…",cyan));}}
     void Set(AppItem a,int pct,string t,Color c){if(progress.TryGetValue(a.Index,out var p))p.Value=Math.Clamp(pct,0,100);if(state.TryGetValue(a.Index,out var s)){s.Text=t;s.ForeColor=c;}status.Text=$"{a.Name} — {t}";}
-    static async Task<string> Capture(string f,string args){var psi=new ProcessStartInfo(f,args){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true};using var p=Process.Start(psi)??throw new Exception("Windows Package Manager could not start.");var o=await p.StandardOutput.ReadToEndAsync();var e=await p.StandardError.ReadToEndAsync();await p.WaitForExitAsync();return o+"\n"+e;}
-    static bool LooksInstalled(string s)=>!string.IsNullOrWhiteSpace(s)&&!s.Contains("No installed package found",StringComparison.OrdinalIgnoreCase)&&!s.Contains("No package found",StringComparison.OrdinalIgnoreCase);
-    static bool HasUpgrade(string s)=>!string.IsNullOrWhiteSpace(s)&&!s.Contains("No applicable upgrade found",StringComparison.OrdinalIgnoreCase)&&!s.Contains("No available upgrade found",StringComparison.OrdinalIgnoreCase)&&s.Contains("Available",StringComparison.OrdinalIgnoreCase);
+    static async Task<(int ExitCode,string Output)> Capture(string f,string args){
+        var psi=new ProcessStartInfo(f,args){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true};
+        using var p=Process.Start(psi)??throw new Exception("Windows Package Manager could not start.");
+        var stdout=p.StandardOutput.ReadToEndAsync();var stderr=p.StandardError.ReadToEndAsync();
+        await p.WaitForExitAsync();
+        return (p.ExitCode,(await stdout)+"\n"+(await stderr));
+    }
+    static bool NoInstalledMatch(string s)=>s.Contains("No installed package found",StringComparison.OrdinalIgnoreCase)||s.Contains("No package found",StringComparison.OrdinalIgnoreCase);
+    static bool NoUpgrade(string s)=>s.Contains("No applicable upgrade found",StringComparison.OrdinalIgnoreCase)||s.Contains("No available upgrade found",StringComparison.OrdinalIgnoreCase)||s.Contains("No installed package found",StringComparison.OrdinalIgnoreCase);
+    static bool HasPackageRow(string s,string id)=>s.Split('\n').Any(row=>row.Contains(id,StringComparison.OrdinalIgnoreCase));
+    static bool LooksInstalled(string s,string id)=>!NoInstalledMatch(s)&&HasPackageRow(s,id);
+    static bool HasUpgrade(string s,string id)=>!NoUpgrade(s)&&HasPackageRow(s,id);
+    static string TrimError(string text)=>text.Length<=300?text.Trim():text[^300..].Trim();
     static void WriteLog(string t){try{var d=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"AppForge");Directory.CreateDirectory(d);File.AppendAllText(Path.Combine(d,"history.log"),$"{DateTime.Now:yyyy-MM-dd HH:mm:ss} {t}{Environment.NewLine}");}catch{}}
     static List<AppItem> ReadSelection(){try{var n=Path.GetFileNameWithoutExtension(Application.ExecutablePath);const string pre="AppForge-";if(n.StartsWith(pre,StringComparison.OrdinalIgnoreCase)){var token=n[pre.Length..];var paren=token.IndexOf(" (");if(paren>=0)token=token[..paren];token=token.Replace('-','+').Replace('_','/');token+=(token.Length%4)switch{2=>"==",3=>"=",_=>""};var bits=Convert.FromBase64String(token);var ids=new HashSet<int>();for(int i=0;i<bits.Length*8;i++)if((bits[i/8]&(1<<(i%8)))!=0)ids.Add(i);var r=Catalog.Where(a=>ids.Contains(a.Index)).ToList();if(r.Count>0)return r;}}catch{}
         try{var bytes=File.ReadAllBytes(Application.ExecutablePath);var marker=Encoding.UTF8.GetBytes("\nAPPFORGE_SELECTION_V1:");var end=Encoding.UTF8.GetBytes(":END\n");int s=Last(bytes,marker);if(s<0)return[];s+=marker.Length;int e=Find(bytes,end,s);if(e<=s)return[];var ids=Encoding.UTF8.GetString(bytes,s,e-s).Split('.',StringSplitOptions.RemoveEmptyEntries).Select(x=>int.TryParse(x,out var i)?i:-1).Where(i=>i>=0).ToHashSet();return Catalog.Where(a=>ids.Contains(a.Index)).ToList();}catch{return[];}}
