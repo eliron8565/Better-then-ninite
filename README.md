@@ -14,6 +14,19 @@ Website: https://eliron8565.github.io/Better-then-ninite/
 - Official vendor download pages for applications that require manual vendor installation
 - Public source code and automated GitHub Actions builds
 
+## Windows post-format setup options (P0)
+
+The Windows selection dialog offers two ways to download your chosen applications:
+
+1. **Personalized EXE (classic)** — the current app selection is encoded in the downloaded EXE filename. Do not rename the file. This is retained for compatibility.
+2. **ZIP + setup JSON (recommended)** — download `AppForge-Windows-Setup.zip`, extract `AppForge-Windows.exe` and `appforge-setup.json` to the **same folder**, then run the EXE. The binary is unchanged; the installer validates its SHA-256 against the manifest and rejects unknown or altered package IDs. If a manifest is present but invalid, installation does not start.
+
+Both options download selected Winget / Microsoft Store packages only **after execution on Windows**, and may open vendor download pages for manual installations. Neither is offline. The ZIP process uses extra browser memory, so the classic EXE remains available for low-memory browsers.
+
+**PC Scanner:** it can scan locally, export a Winget package list to JSON for Setup Studio, and (only after an explicit confirmation dialog) attempt package updates. Software inventory exports may reveal installed apps; keep them private.
+
+See [SECURITY.md](SECURITY.md) for checksums, unsigned build warnings, validation limits and automated-test coverage.
+
 ## Setup Studio — backup, restore and manage apps
 
 AppForge includes a client-side Setup Studio above the application catalog, inspired by
