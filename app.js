@@ -153,8 +153,9 @@ async function downloadInstaller(){
 function reviewBundle(){
   const chosen=availableApps().filter(a=>selected.has(a.key)); if(!chosen.length) return;
   setText('#dialogEyebrow',`Your ${platformNames[platform]} installer`); setText('#dialogIntro',platform==='windows'?`The EXE will open with AppForge GUI and these ${chosen.length} selected apps.`:`AppForge will create one installer file with these ${chosen.length} selected apps.`);
-  setText('#platformNote',platform==='windows'?'Apps install through Winget. Driver items open the official NVIDIA/AMD page so AppForge never guesses the wrong GPU driver.':platform==='linux'?'Linux uses Flatpak + Flathub.':'macOS uses Homebrew.');
-  const list=$('#selectedList'); if(list) list.innerHTML=chosen.map(a=>`<span class="selected-pill"><span class="mini-logo">${logoMarkup(a)}</span>${a.name}</span>`).join(''); setText('#downloadScript',platform==='windows'?'⬇ Download AppForge EXE':'⬇ Download installer'); $('#reviewDialog')?.showModal();
+  const manualWindows=platform==='windows'?chosen.filter(a=>String(a.pkg?.windows||'').startsWith('url:')).length:0;
+  setText('#platformNote',platform==='windows'?`${chosen.length-manualWindows} automatic via Winget / Microsoft Store; ${manualWindows} manual download pages (NOT automatically installed). Requires internet and Winget/App Installer on the new Windows installation.`:platform==='linux'?'Linux uses Flatpak + Flathub.':'macOS uses Homebrew.');
+  const list=$('#selectedList'); if(list) list.innerHTML=chosen.map(a=>`<span class="selected-pill"><span class="mini-logo">${logoMarkup(a)}</span>${a.name}${platform==='windows' && String(a.pkg?.windows||'').startsWith('url:')?' (MANUAL SETUP)':''}</span>`).join(''); setText('#downloadScript',platform==='windows'?'⬇ Download AppForge EXE':'⬇ Download installer'); $('#reviewDialog')?.showModal();
 }
 
 $$('.platform-btn').forEach(btn=>btn.addEventListener('click',()=>{platform=btn.dataset.platform;localStorage.setItem('appforge-platform',platform);updatePlatformUI();}));
