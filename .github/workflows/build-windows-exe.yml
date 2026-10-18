@@ -108,6 +108,38 @@ jobs:
           }
           Write-Host 'All personalized filename selection tests passed.'
 
+      - name: Verify fixed EXE with JSON setup manifest on Windows
+        shell: pwsh
+        run: |
+          $folder=Join-Path $env:RUNNER_TEMP 'appforge-manifest-test'
+          New-Item -ItemType Directory -Force $folder | Out-Null
+          $exe=Join-Path $folder 'AppForge-Windows.exe'
+          Copy-Item publish/AppForge.exe $exe
+          $jsonPath=Join-Path $folder 'appforge-setup.json'
+          $manifest=@{
+            format='appforge-windows-manifest'
+            schemaVersion=1
+            platform='windows'
+            exeSha256=(Get-FileHash $exe -Algorithm SHA256).Hash.ToLowerInvariant()
+            apps=@(
+              @{index=1;name='Mozilla Firefox';packageId='Mozilla.Firefox'}
+              @{index=97;name='ChatGPT Desktop';packageId='msstore:9PLM9XGG6VKS'}
+            )
+          }
+          $manifest|ConvertTo-Json -Depth 8 | Set-Content -Encoding utf8 $jsonPath
+          $good=Start-Process -FilePath $exe -ArgumentList '--verify-selection=1,97' -Wait -PassThru
+          if($good.ExitCode -ne 0){throw "Valid manifest selection failed: $($good.ExitCode)"}
+          $manifest.apps[0].packageId='Untrusted.OtherApp'
+          $manifest|ConvertTo-Json -Depth 8 | Set-Content -Encoding utf8 $jsonPath
+          $bad=Start-Process -FilePath $exe -ArgumentList '--verify-selection=1,97' -Wait -PassThru
+          if($bad.ExitCode -eq 0){throw 'Tampered package ID was accepted'}
+          $manifest.apps[0].packageId='Mozilla.Firefox'
+          $manifest.exeSha256=('0'*64)
+          $manifest|ConvertTo-Json -Depth 8 | Set-Content -Encoding utf8 $jsonPath
+          $badHash=Start-Process -FilePath $exe -ArgumentList '--verify-selection=1,97' -Wait -PassThru
+          if($badHash.ExitCode -eq 0){throw 'Mismatched executable SHA-256 was accepted'}
+          Write-Host 'Valid manifest passed; tampered IDs and hashes were rejected.'
+
       - name: Publish latest Windows release asset
         shell: bash
         env: { GH_TOKEN: '${{ github.token }}' }
