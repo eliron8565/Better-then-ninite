@@ -256,7 +256,7 @@
   if(!apps.some(a=>a.key==='wine')) apps.push({name:'Wine',key:'wine',category:'Utilities',domain:'winehq.org',popular:9,tags:['linux','gaming','developer','free'],pkg:{linux:'native:wine'},logo:fav('winehq.org'),desc:'Run compatible Windows applications on Linux using Wine.'});
 
   if(!apps.some(a=>a.key==='brave-origin')) apps.push({name:'Brave Origin',key:'brave-origin',category:'Privacy Browsers',domain:'brave.com',popular:9,tags:['privacy','linux','free'],pkg:{linux:'url:https://brave.com/origin/linux/'},logo:fav('brave.com'),desc:'Brave Origin for Linux, separate from standard Brave.'});
-  if(!apps.some(a=>a.key==='vim')) apps.push({name:'Vim',key:'vim',category:'Development',domain:'vim.org',popular:9,tags:['developer','student','free'],pkg:{windows:'url:https://www.vim.org/download.php',linux:'native:vim',mac:{type:'formula',id:'vim'}},logo:fav('vim.org'),desc:'Free, powerful terminal text editor.'});
+  if(!apps.some(a=>a.key==='vim')) apps.push({name:'Vim',key:'vim',category:'Development',domain:'vim.org',popular:9,tags:['developer','student','free'],winIndex:163,pkg:{windows:'url:https://www.vim.org/download.php',linux:'native:vim',mac:{type:'formula',id:'vim'}},logo:fav('vim.org'),desc:'Free, powerful terminal text editor.'});
 
   // Linux file managers. These entries have no Windows installer index.
   if(!apps.some(a=>a.key==='yazi')) apps.push({name:"Yazi",key:'yazi',category:'File Managers',domain:'yazi-rs.github.io',popular:8,tags:['linux','free','utilities'],pkg:{linux:'native:yazi',mac:{type:'formula',id:'yazi'}},logo:fav('yazi-rs.github.io'),desc:'Free file manager for Linux.'});
