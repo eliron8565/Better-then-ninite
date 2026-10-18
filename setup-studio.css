@@ -46,3 +46,13 @@
 @media(max-width:900px) {.studio-grid {grid-template-columns:1fr}}
 @media(max-width:580px) {.studio-stats {gap:7px}.studio-stats>div {padding:10px}.studio-stats small {font-size:.67rem}.studio-hero{flex-direction:column}.studio-platform{align-self:flex-start}#studioChecks {grid-template-columns:1fr}.studio-controls button {flex:1 1 auto}}
 @media(prefers-reduced-motion:reduce){.studio-wrap button{transition:none}.studio-wrap button:hover{transform:none}}
+
+
+.catalog-install-badge {display:inline-flex;align-items:center;justify-content:center;border-radius:20px;padding:4px 8px;font-size:.65rem;font-weight:800;letter-spacing:.01em;white-space:nowrap}
+.catalog-install-badge.automatic {background:rgba(69,204,151,.11);border:1px solid rgba(69,204,151,.36);color:var(--forge-green,#6ae0ab)}
+.catalog-install-badge.manual {background:rgba(246,181,77,.11);border:1px solid rgba(246,181,77,.4);color:var(--forge-amber,#f7c75f)}
+.catalog-head {display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#installModeWrap {display:inline-flex;align-items:center;gap:8px}
+#installModeWrap.hidden {display:none!important}
+#installModeFilter {max-width:175px}
+@media(max-width:620px){.catalog-install-badge{font-size:.6rem;padding:3px 6px}#installModeFilter{max-width:135px}}
