@@ -7,7 +7,7 @@ namespace AppForgeInstaller;
 
 internal static class Program
 {
-    [STAThread] static int Main(string[] args) { if(args.Length==1 && args[0]=="--self-test") return MainForm.SelfTest(); if(args.Length==1 && args[0].StartsWith("--verify-selection=",StringComparison.Ordinal))return MainForm.VerifySelection(args[0]["--verify-selection=".Length..]); ApplicationConfiguration.Initialize(); Application.Run(new MainForm()); return 0; }
+    [STAThread] static int Main(string[] args) { if(args.Length==1 && args[0]=="--self-test") return MainForm.SelfTest(); if(args.Length==1 && args[0]=="--real-install-smoke")return MainForm.RealInstallSmoke().GetAwaiter().GetResult(); if(args.Length==1 && args[0].StartsWith("--verify-selection=",StringComparison.Ordinal))return MainForm.VerifySelection(args[0]["--verify-selection=".Length..]); ApplicationConfiguration.Initialize(); Application.Run(new MainForm()); return 0; }
 }
 
 internal sealed record AppItem(int Index, string Name, string PackageId);
@@ -60,9 +60,40 @@ A(0,"Google Chrome","Google.Chrome"),A(1,"Mozilla Firefox","Mozilla.Firefox"),A(
     void ToggleDetails(){detailsVisible=!detailsVisible;rows.Parent!.Visible=detailsVisible;details.Text=detailsVisible?"Hide details":"Show details";}
 
     async Task StartAutomatically(){if(selected.Count==0){cancel.Visible=false;return;}await RunAsync(false);}
+    // Requires a disposable CI VM and explicit opt-in. Exercise real Winget and verify its result.
+    // Never use this diagnostic mode to install arbitrary package IDs.
+    public static async Task<int> RealInstallSmoke(){
+        if(Environment.GetEnvironmentVariable("APPFORGE_CI_REAL_INSTALL")!="YES")return 80;
+        var app=Catalog.Single(a=>a.Index==158 && a.PackageId=="Helix.Helix");
+        try{
+            var version=await Capture("winget","--version");
+            if(version.ExitCode!=0){Console.Error.WriteLine("Winget unavailable: "+TrimError(version.Output));return 81;}
+            var before=await Capture("winget",$"list --id \"{PackageCode(app)}\" -e{PackageSource(app)} --accept-source-agreements --disable-interactivity");
+            if(LooksInstalled(before.Output,PackageCode(app))){
+                Console.Error.WriteLine("Helix is already installed on this runner; cannot certify a fresh installation.");
+                return 82;
+            }
+            if(before.ExitCode!=0 && !NoInstalledMatch(before.Output)){
+                Console.Error.WriteLine("Winget preflight failed: "+TrimError(before.Output));return 83;
+            }
+            var install=await Capture("winget",WingetArgs(app,"install"));
+            if(install.ExitCode!=0){
+                Console.Error.WriteLine("Real install returned "+install.ExitCode+": "+TrimError(install.Output));return 84;
+            }
+            var after=await Capture("winget",$"list --id \"{PackageCode(app)}\" -e{PackageSource(app)} --accept-source-agreements --disable-interactivity");
+            if(after.ExitCode!=0||!LooksInstalled(after.Output,PackageCode(app))){
+                Console.Error.WriteLine("Winget returned success but app was not verifiably installed: "+TrimError(after.Output));
+                return 85;
+            }
+            Console.WriteLine("REAL INSTALL VERIFIED: Helix.Helix (Winget install exit 0 plus post-install list).");
+            return 0;
+        }catch(Exception ex){Console.Error.WriteLine("Real install test failed: "+ex);return 86;}
+    }
+
     static bool IsStoreApp(AppItem a)=>a.PackageId.StartsWith("msstore:",StringComparison.OrdinalIgnoreCase);
     static string PackageCode(AppItem a)=>IsStoreApp(a)?a.PackageId["msstore:".Length..]:a.PackageId;
     static string PackageSource(AppItem a)=>IsStoreApp(a)?" --source msstore":" --source winget";
+    static string WingetArgs(AppItem a,string verb)=>$"{verb} --id \"{PackageCode(a)}\" -e{PackageSource(a)} --silent --accept-package-agreements --accept-source-agreements --disable-interactivity";
 
     async Task RunAsync(bool failedOnly){
         cts=new();errors.Clear();cancel.Visible=true;retry.Visible=false;close.Visible=false;
@@ -123,7 +154,7 @@ A(0,"Google Chrome","Google.Chrome"),A(1,"Mozilla Firefox","Mozilla.Firefox"),A(
         status.Text=$"{ok} installed/updated • {skipped} up to date • {manual} manual setup • {failed} failed";
         WriteLog(status.Text);
     }
-    async Task<int> Winget(AppItem a,string verb,CancellationToken token){var psi=new ProcessStartInfo("winget",$"{verb} --id \"{PackageCode(a)}\" -e{PackageSource(a)} --silent --accept-package-agreements --accept-source-agreements --disable-interactivity"){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true,StandardOutputEncoding=Encoding.UTF8,StandardErrorEncoding=Encoding.UTF8};using var p=new Process{StartInfo=psi};active=p;p.Start();var o=ReadProgress(p.StandardOutput,a,token);var e=ReadProgress(p.StandardError,a,token);await p.WaitForExitAsync(token);await Task.WhenAll(o,e);return p.ExitCode;}
+    async Task<int> Winget(AppItem a,string verb,CancellationToken token){var psi=new ProcessStartInfo("winget",WingetArgs(a,verb)){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true,StandardOutputEncoding=Encoding.UTF8,StandardErrorEncoding=Encoding.UTF8};using var p=new Process{StartInfo=psi};active=p;p.Start();var o=ReadProgress(p.StandardOutput,a,token);var e=ReadProgress(p.StandardError,a,token);await p.WaitForExitAsync(token);await Task.WhenAll(o,e);return p.ExitCode;}
     async Task ReadProgress(StreamReader r,AppItem a,CancellationToken t){while(!r.EndOfStream&&!t.IsCancellationRequested){var x=await r.ReadLineAsync(t);if(string.IsNullOrWhiteSpace(x))continue;var m=PercentRx.Match(x);if(m.Success&&int.TryParse(m.Groups[1].Value,out var n))BeginInvoke(()=>Set(a,n,$"Downloading {n}%",cyan));else if(x.Contains("Installing",StringComparison.OrdinalIgnoreCase))BeginInvoke(()=>Set(a,Math.Max(5,progress[a.Index].Value),"Installing…",cyan));}}
     void Set(AppItem a,int pct,string t,Color c){if(progress.TryGetValue(a.Index,out var p))p.Value=Math.Clamp(pct,0,100);if(state.TryGetValue(a.Index,out var s)){s.Text=t;s.ForeColor=c;}status.Text=$"{a.Name} — {t}";}
     static async Task<(int ExitCode,string Output)> Capture(string f,string args){
