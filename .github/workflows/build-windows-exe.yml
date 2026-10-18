@@ -5,6 +5,10 @@ on:
     branches: [ main ]
     paths:
       - 'src/AppForgeInstaller/**'
+      - 'app.js'
+      - 'extra-apps.js'
+      - 'download-fix.js'
+      - 'scripts/validate-windows-catalog.cjs'
       - '.github/workflows/build-windows-exe.yml'
   workflow_dispatch:
 
@@ -24,6 +28,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
+      - name: Validate Windows package mappings against website
+        run: node scripts/validate-windows-catalog.cjs
       - uses: actions/setup-dotnet@v4
         with: { dotnet-version: '8.0.x' }
 
