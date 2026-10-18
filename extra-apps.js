@@ -33,12 +33,12 @@
     ['Ollama','AI & Local Models','ollama.com',10,'Ollama.Ollama',91,['ai','developer']],
     ['LM Studio','AI & Local Models','lmstudio.ai',10,'ElementLabs.LMStudio',92,['ai']],
     ['Jan','AI & Local Models','jan.ai',9,'Jan.Jan',93,['ai','privacy']],
-    ['GPT4All','AI & Local Models','nomic.ai/gpt4all',8,'Nomic.GPT4All',94,['ai','privacy']],
-    ['AnythingLLM','AI & Local Models','anythingllm.com',9,'MintplexLabs.AnythingLLM',95,['ai','agent','privacy']],
+    ['GPT4All','AI & Local Models','nomic.ai/gpt4all',8,'nomic.gpt4all',94,['ai','privacy']],
+    ['AnythingLLM','AI & Local Models','anythingllm.com',9,'url:https://github.com/Mintplex-Labs/anything-llm/releases/latest',95,['ai','agent','privacy']],
 
     // AI agents / coding assistants
     ['Claude Desktop','AI Agents','claude.ai',9,'Anthropic.Claude',96,['ai','agent']],
-    ['ChatGPT Desktop','AI Agents','openai.com/chatgpt/desktop',10,'OpenAI.ChatGPT',97,['ai','agent']],
+    ['ChatGPT Desktop','AI Agents','openai.com/chatgpt/desktop',10,'msstore:9PLM9XGG6VKS',97,['ai','agent']],
     ['Cursor','AI Agents','cursor.com',10,'Anysphere.Cursor',98,['ai','agent','developer']],
     ['Windsurf','AI Agents','windsurf.com',9,'Codeium.Windsurf',99,['ai','agent','developer']],
     ['GitHub Desktop + Copilot tools','AI Agents','github.com/features/copilot',7,'url:https://github.com/features/copilot',100,['ai','agent','developer']],
@@ -121,7 +121,7 @@
     ['Neovim','Development','neovim.io',9,'Neovim.Neovim',157,['developer','free']],
     ['Helix Editor','Development','helix-editor.com',9,'Helix.Helix',158,['developer','free']],
     ['Filelight','Utilities','apps.kde.org/filelight',8,'KDE.Filelight',159,['essentials','free']],
-    ['Pear Desktop','Media','github.com/pear-devs/pear-desktop',8,'pear-devs.pear-desktop',160,['media','free']],
+    ['Pear Desktop','Media','github.com/pear-devs/pear-desktop',8,'url:https://github.com/pear-devs/pear-desktop/releases/latest',160,['media','free']],
     ['Twintail Launcher','Gaming','twintaillauncher.app',9,'TwintailTeam.TTL',161,['gaming','free']],
     ['ONLYOFFICE Desktop Editors','Documents & Office','onlyoffice.com',10,'ONLYOFFICE.DesktopEditors',162,['student','essentials','free']]
   ];
