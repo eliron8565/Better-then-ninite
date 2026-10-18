@@ -2,7 +2,7 @@
 
 AppForge is an open-source application installer that lets users select the applications they want and download one installer for their selection.
 
-Website: https://eliron8565.github.io/beder-then-ninite/
+Website: https://eliron8565.github.io/Better-then-ninite/
 
 ## Features
 
@@ -18,7 +18,7 @@ Website: https://eliron8565.github.io/beder-then-ninite/
 
 Use the AppForge website to select the applications you want and download the installer:
 
-https://eliron8565.github.io/beder-then-ninite/
+https://eliron8565.github.io/Better-then-ninite/
 
 ## Code signing policy
 
