@@ -25,6 +25,6 @@ AppForge is applying for free open-source code signing provided by SignPath.io, 
 ## Open source
 
 The source code for AppForge is publicly available at:
-https://github.com/eliron8565/beder-then-ninite
+https://github.com/eliron8565/Better-then-ninite
 
 For privacy or security questions, please use the repository's GitHub issue/contact facilities.
