@@ -17,7 +17,7 @@ External contributions must be reviewed by the project maintainer before they ar
 
 ## Build and signing rules
 
-- AppForge release artifacts are built from the public source code and build configuration in `eliron8565/beder-then-ninite`.
+- AppForge release artifacts are built from the public source code and build configuration in `eliron8565/Better-then-ninite`.
 - The Windows build is produced using GitHub Actions.
 - Only AppForge artifacts produced from AppForge's source and build scripts may be submitted for AppForge signing.
 - Third-party applications installed by AppForge are not signed with the AppForge signing certificate.
