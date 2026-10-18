@@ -377,7 +377,7 @@ internal sealed class ScannerForm : Form
 
         appForgeButton.Text = "OPEN APPFORGE";
         StyleSecondary(appForgeButton);
-        appForgeButton.Click += (_, _) => Process.Start(new ProcessStartInfo("https://eliron8565.github.io/beder-then-ninite/") { UseShellExecute = true });
+        appForgeButton.Click += (_, _) => Process.Start(new ProcessStartInfo("https://eliron8565.github.io/Better-then-ninite/") { UseShellExecute = true });
 
         copyButton.Text = "COPY REPORT";
         StyleSecondary(copyButton);
