@@ -18,6 +18,7 @@ internal sealed class MainForm : Form
     readonly ProgressBar overall=new(); readonly Label headline=new(), status=new(), count=new(); readonly TableLayoutPanel rows=new(); readonly Button details=new(), cancel=new(), retry=new(), close=new();
     readonly Dictionary<int,Label> state=new(); readonly Dictionary<int,ProgressBar> progress=new(); readonly Dictionary<int,string> errors=new();
     readonly List<AppItem> selected; CancellationTokenSource? cts; Process? active; bool detailsVisible=true;
+    private static string SelectionWarning = string.Empty;
     static readonly Regex PercentRx=new(@"(?<!\d)(100|[1-9]?\d)\s*%",RegexOptions.Compiled);
 
     static AppItem A(int i,string n,string p)=>new(i,n,p);
@@ -46,7 +47,8 @@ A(0,"Google Chrome","Google.Chrome"),A(1,"Mozilla Firefox","Mozilla.Firefox"),A(
         var root=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(24),RowCount=6,ColumnCount=1,BackColor=bg};root.RowStyles.Add(new RowStyle(SizeType.AutoSize));root.RowStyles.Add(new RowStyle(SizeType.AutoSize));root.RowStyles.Add(new RowStyle(SizeType.AutoSize));root.RowStyles.Add(new RowStyle(SizeType.Percent,100));root.RowStyles.Add(new RowStyle(SizeType.AutoSize));root.RowStyles.Add(new RowStyle(SizeType.AutoSize));Controls.Add(root);
         var brand=new Label{AutoSize=true,Text="APPFORGE",ForeColor=cyan,Font=new Font("Segoe UI",11,FontStyle.Bold),Margin=new Padding(0,0,0,5)};root.Controls.Add(brand);
         headline.AutoSize=true;headline.Text=selected.Count>0?"Installing and updating your apps":"No app selection found";headline.ForeColor=text;headline.Font=new Font("Segoe UI",22,FontStyle.Bold);headline.Margin=new Padding(0,0,0,4);root.Controls.Add(headline);
-        status.AutoSize=true;status.Text=selected.Count>0?"No toolbars. No extra clicks. AppForge handles your selected apps automatically.":"Choose apps on the AppForge website and download a fresh installer.";status.ForeColor=muted;status.Margin=new Padding(0,0,0,18);root.Controls.Add(status);
+        status.AutoSize=true;status.Text=!string.IsNullOrEmpty(SelectionWarning)?SelectionWarning:selected.Count>0?"No toolbars. No extra clicks. AppForge handles your selected apps automatically.":"Choose apps on the AppForge website and download a fresh installer.";status.ForeColor=!string.IsNullOrEmpty(SelectionWarning)?red:muted;status.Margin=new Padding(0,0,0,18);root.Controls.Add(status);
+        if (!string.IsNullOrEmpty(SelectionWarning)) headline.Text="Setup manifest needs attention";
         var host=new Panel{Dock=DockStyle.Fill,BackColor=panel,Padding=new Padding(1),Margin=new Padding(0,0,0,16)};rows.Dock=DockStyle.Fill;rows.AutoScroll=true;rows.BackColor=panel;rows.ColumnCount=3;rows.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,43));rows.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,37));rows.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,20));host.Controls.Add(rows);root.Controls.Add(host);
         AddHeader();foreach(var a in selected)AddRow(a);
         var prog=new TableLayoutPanel{Dock=DockStyle.Fill,AutoSize=true,ColumnCount=2,Margin=new Padding(0,0,0,14)};prog.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));prog.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));overall.Dock=DockStyle.Fill;overall.Height=20;overall.Maximum=Math.Max(1,selected.Count);count.AutoSize=true;count.Text=$"0 / {selected.Count}";count.ForeColor=muted;count.Margin=new Padding(12,0,0,0);prog.Controls.Add(overall,0,0);prog.Controls.Add(count,1,0);root.Controls.Add(prog);
@@ -138,7 +140,15 @@ A(0,"Google Chrome","Google.Chrome"),A(1,"Mozilla Firefox","Mozilla.Firefox"),A(
     static bool HasUpgrade(string s,string id)=>!NoUpgrade(s)&&HasPackageRow(s,id);
     static string TrimError(string text)=>text.Length<=300?text.Trim():text[^300..].Trim();
     static void WriteLog(string t){try{var d=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"AppForge");Directory.CreateDirectory(d);File.AppendAllText(Path.Combine(d,"history.log"),$"{DateTime.Now:yyyy-MM-dd HH:mm:ss} {t}{Environment.NewLine}");}catch{}}
-    static List<AppItem> ReadSelection(){try{var n=Path.GetFileNameWithoutExtension(Application.ExecutablePath);const string pre="AppForge-";if(n.StartsWith(pre,StringComparison.OrdinalIgnoreCase)){var token=n[pre.Length..];var paren=token.IndexOf(" (");if(paren>=0)token=token[..paren];token=token.Replace('-','+').Replace('_','/');token+=(token.Length%4)switch{2=>"==",3=>"=",_=>""};var bits=Convert.FromBase64String(token);var ids=new HashSet<int>();for(int i=0;i<bits.Length*8;i++)if((bits[i/8]&(1<<(i%8)))!=0)ids.Add(i);var r=Catalog.Where(a=>ids.Contains(a.Index)).ToList();if(r.Count>0)return r;}}catch{}
+    static List<AppItem> ReadSelection(){
+        SelectionWarning=string.Empty;
+        var manifest=SelectionManifest.Read(Application.ExecutablePath,Catalog);
+        if(manifest.Found){
+            if(manifest.Valid)return manifest.Apps.ToList();
+            SelectionWarning=manifest.Error;
+            return new List<AppItem>(); // Never silently fall back to a filename if a manifest is invalid.
+        }
+        try{var n=Path.GetFileNameWithoutExtension(Application.ExecutablePath);const string pre="AppForge-";if(n.StartsWith(pre,StringComparison.OrdinalIgnoreCase)){var token=n[pre.Length..];var paren=token.IndexOf(" (");if(paren>=0)token=token[..paren];token=token.Replace('-','+').Replace('_','/');token+=(token.Length%4)switch{2=>"==",3=>"=",_=>""};var bits=Convert.FromBase64String(token);var ids=new HashSet<int>();for(int i=0;i<bits.Length*8;i++)if((bits[i/8]&(1<<(i%8)))!=0)ids.Add(i);var r=Catalog.Where(a=>ids.Contains(a.Index)).ToList();if(r.Count>0)return r;}}catch{}
         try{var bytes=File.ReadAllBytes(Application.ExecutablePath);var marker=Encoding.UTF8.GetBytes("\nAPPFORGE_SELECTION_V1:");var end=Encoding.UTF8.GetBytes(":END\n");int s=Last(bytes,marker);if(s<0)return[];s+=marker.Length;int e=Find(bytes,end,s);if(e<=s)return[];var ids=Encoding.UTF8.GetString(bytes,s,e-s).Split('.',StringSplitOptions.RemoveEmptyEntries).Select(x=>int.TryParse(x,out var i)?i:-1).Where(i=>i>=0).ToHashSet();return Catalog.Where(a=>ids.Contains(a.Index)).ToList();}catch{return[];}}
     static int Last(byte[]s,byte[]p){for(int i=s.Length-p.Length;i>=0;i--){bool ok=true;for(int j=0;j<p.Length;j++)if(s[i+j]!=p[j]){ok=false;break;}if(ok)return i;}return-1;}static int Find(byte[]s,byte[]p,int start){for(int i=start;i<=s.Length-p.Length;i++){bool ok=true;for(int j=0;j<p.Length;j++)if(s[i+j]!=p[j]){ok=false;break;}if(ok)return i;}return-1;}
 }
