@@ -47,10 +47,12 @@ internal sealed class ScannerForm : Form
     private readonly Button scanButton = new();
     private readonly Button updateButton = new();
     private readonly Button copyButton = new();
+    private readonly Button exportButton = new();
     private readonly Button appForgeButton = new();
     private readonly FlowLayoutPanel updateChips = new();
     private readonly List<string> detectedPackageIds = new();
     private string lastReport = string.Empty;
+    private string lastWingetExport = string.Empty;
     private bool wingetAvailable;
     private bool updateCompleted;
 
@@ -371,9 +373,9 @@ internal sealed class ScannerForm : Form
 
     private Control BuildActions()
     {
-        var actions = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 5, AutoSize = true };
+        var actions = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 6, AutoSize = true };
         actions.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        for (var i = 1; i < 5; i++) actions.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        for (var i = 1; i < 6; i++) actions.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
         appForgeButton.Text = "OPEN APPFORGE";
         StyleSecondary(appForgeButton);
@@ -389,6 +391,29 @@ internal sealed class ScannerForm : Form
                 try { Clipboard.SetText(lastReport); status.Text = "● Report copied ✓"; }
                 catch { status.Text = "● Could not copy report"; }
             }
+        };
+
+        exportButton.Text = "EXPORT APPS JSON";
+        StyleSecondary(exportButton);
+        exportButton.Enabled = false;
+        exportButton.Click += (_, _) =>
+        {
+            if (string.IsNullOrWhiteSpace(lastWingetExport)) return;
+            using var dialog = new SaveFileDialog
+            {
+                Title = "Export installed app IDs for AppForge Setup Studio",
+                Filter = "JSON files (*.json)|*.json",
+                FileName = "AppForge-winget-apps.json",
+                DefaultExt = "json",
+                AddExtension = true
+            };
+            if (dialog.ShowDialog(this) != DialogResult.OK) return;
+            try
+            {
+                File.WriteAllText(dialog.FileName, lastWingetExport, new UTF8Encoding(false));
+                status.Text = "● App list exported locally. Keep the JSON private.";
+            }
+            catch (Exception ex) { status.Text = "● Export failed: " + ex.Message; }
         };
 
         scanButton.Text = "↻  SCAN AGAIN";
@@ -407,8 +432,9 @@ internal sealed class ScannerForm : Form
         actions.Controls.Add(new Panel { Dock = DockStyle.Fill }, 0, 0);
         actions.Controls.Add(appForgeButton, 1, 0);
         actions.Controls.Add(copyButton, 2, 0);
-        actions.Controls.Add(scanButton, 3, 0);
-        actions.Controls.Add(updateButton, 4, 0);
+        actions.Controls.Add(exportButton, 3, 0);
+        actions.Controls.Add(scanButton, 4, 0);
+        actions.Controls.Add(updateButton, 5, 0);
         return actions;
     }
 
@@ -445,6 +471,8 @@ internal sealed class ScannerForm : Form
         scanButton.Enabled = false;
         updateButton.Enabled = false;
         copyButton.Enabled = false;
+        exportButton.Enabled = false;
+        lastWingetExport = string.Empty;
         detectedPackageIds.Clear();
         wingetAvailable = false;
         status.Text = "● Scanning your PC…";
@@ -494,18 +522,23 @@ internal sealed class ScannerForm : Form
                 {
                     try
                     {
-                        using var doc = JsonDocument.Parse(await File.ReadAllTextAsync(temp));
-                        if (doc.RootElement.TryGetProperty("Sources", out var sources))
+                        var exported = await File.ReadAllTextAsync(temp);
+                        using var doc = JsonDocument.Parse(exported);
+                        if (doc.RootElement.TryGetProperty("Sources", out var sources) && sources.ValueKind == JsonValueKind.Array)
                         {
                             foreach (var source in sources.EnumerateArray())
                             {
-                                if (source.TryGetProperty("Packages", out var packages)) installedCount += packages.GetArrayLength();
+                                if (source.TryGetProperty("Packages", out var packages) && packages.ValueKind == JsonValueKind.Array)
+                                    installedCount += packages.GetArrayLength();
                             }
+                            lastWingetExport = exported;
                         }
                     }
                     catch { }
-                    try { File.Delete(temp); } catch { }
                 }
+                // Avoid leaving a potentially sensitive software inventory in temporary storage.
+                try { if (File.Exists(temp)) File.Delete(temp); } catch { }
+                exportButton.Enabled = !string.IsNullOrWhiteSpace(lastWingetExport);
 
                 status.Text = "● Checking for updates…";
                 var upgrades = await RunCaptureAsync("winget", "upgrade --accept-source-agreements --disable-interactivity", 90000);
@@ -578,7 +611,13 @@ internal sealed class ScannerForm : Form
     {
         if (!wingetAvailable || detectedPackageIds.Count == 0) return;
 
-        var targets = detectedPackageIds.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        var targets = detectedPackageIds.Distinct(StringComparer.OrdinalIgnoreCase)
+            .Where(id => Regex.IsMatch(id, @"^[A-Za-z0-9.+_-]+$")).ToList();
+        if (targets.Count == 0) return;
+        if (MessageBox.Show(this,
+            "Update " + targets.Count + " detected apps using Winget? These changes may require administrator permissions or restart.\n\nOnly proceed if you trust the package sources.",
+            "Confirm application updates", MessageBoxButtons.YesNo, MessageBoxIcon.Warning,
+            MessageBoxDefaultButton.Button2) != DialogResult.Yes) return;
         scanButton.Enabled = false;
         updateButton.Enabled = false;
         copyButton.Enabled = false;
@@ -709,7 +748,7 @@ internal sealed class ScannerForm : Form
             if (parts.Length < 4) continue;
 
             var id = parts[1].Trim();
-            if (id.Length < 2 || id.Contains(' ')) continue;
+            if (id.Length < 2 || !Regex.IsMatch(id, @"^[A-Za-z0-9.+_-]+$")) continue;
             if (!seen.Add(id)) continue;
 
             names.Add(parts[0].Trim());
