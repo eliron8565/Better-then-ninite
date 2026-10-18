@@ -14,6 +14,45 @@ Website: https://eliron8565.github.io/Better-then-ninite/
 - Official vendor download pages for applications that require manual vendor installation
 - Public source code and automated GitHub Actions builds
 
+## Setup Studio — backup, restore and manage apps
+
+AppForge includes a client-side Setup Studio above the application catalog, inspired by
+features in UniGetUI, Patch My PC, winstall and Wingetter. You can:
+
+- Save multiple named profiles in the browser, and export/import them as **AppForge JSON**.
+- Import a standard **WinGet JSON export** from a previously used Windows PC.
+- See which Windows apps have an automatic package source and which require manual setup.
+- Filter the Windows catalog by automatic/manual setup.
+- Preview, copy or download selected-app **install**, **upgrade** and **uninstall** PowerShell scripts.
+- Use a pre-format checklist for backups, credentials, installer and driver preparation.
+
+**Before formatting Windows:** choose your apps, download a personalized EXE from the
+website, and separately export your AppForge JSON profile. Put both on a USB drive.
+The profile stores app identifiers **not installers**. Winget still needs internet and
+Microsoft App Installer after Windows is reinstalled.
+
+You can export your currently installed Winget packages on the old PC with:
+
+```powershell
+winget export -o "$env:USERPROFILE\Desktop\winget-apps.json" --accept-source-agreements
+```
+
+Then import the JSON in Setup Studio to match supported apps. Unmatched apps are reported
+rather than fabricated; vendor/manual apps may not be available in a Winget export.
+
+**Safety and limitations:** the site cannot inspect installed apps, uninstall programs,
+apply system optimizations, or schedule updates on your computer. Generated PowerShell
+scripts are text files for your review and explicitly require you to execute them.
+The uninstall script requires typing `REMOVE` before it can run removal commands.
+Selecting apps or checking off the pre-format checklist does not prove installations
+or backups completed. Full Windows fresh-install compatibility is not guaranteed.
+
+## Testing
+
+Website syntax, Setup Studio profile/script tests, and Windows catalog consistency
+are run in the `Test AppForge Website` GitHub Actions workflow. Windows EXE build tests
+run separately and do not substitute for real installs on a fresh PC.
+
 ## Downloads
 
 Use the AppForge website to select the applications you want and download the installer:
