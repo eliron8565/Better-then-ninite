@@ -5,6 +5,8 @@ on:
     branches: [ main ]
     paths:
       - 'setup-studio.js'
+      - 'windows-bundle.js'
+      - 'scripts/test-windows-bundle.cjs'
       - 'setup-studio.css'
       - 'scripts/test-setup-studio.cjs'
       - 'app.js'
@@ -31,11 +33,15 @@ jobs:
           node --check enhancements.js
           node --check download-fix.js
           node --check setup-studio.js
+          node --check windows-bundle.js
       - name: Test setup profiles and package commands
         run: node scripts/test-setup-studio.cjs
+      - name: Test Windows ZIP sidecar selection schema
+        run: node scripts/test-windows-bundle.cjs
       - name: Check Windows catalog stays consistent
         run: node scripts/validate-windows-catalog.cjs
       - name: Verify Studio loads on homepage
         run: |
           grep -q 'setup-studio.js' index.html
           grep -q 'setup-studio.css' index.html
+          grep -q 'windows-bundle.js' index.html
