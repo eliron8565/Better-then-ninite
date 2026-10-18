@@ -46,7 +46,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if ! gh release view appforge-scanner-latest >/dev/null 2>&1; then
-            gh release create appforge-scanner-latest --target "${GITHUB_SHA}" --title "AppForge PC Scanner" --notes "Standalone read-only AppForge PC Scanner for Windows."
+            gh release create appforge-scanner-latest --target "${GITHUB_SHA}" --title "AppForge PC Scanner" --notes "AppForge PC Scanner: local scan by default, optional updates only after explicit confirmation, and local Winget JSON export."
           fi
           gh release upload appforge-scanner-latest scanner-publish/AppForge-Scanner.exe scanner-publish/AppForge-Scanner.exe.sha256 --clobber
 
