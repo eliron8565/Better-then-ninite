@@ -23,6 +23,17 @@ for (const name of ['Metasploit Framework', 'John the Ripper']) {
   entries.push({ index: Number(index[1]), name, pkg: pkg[1] });
 }
 
+// Detect one-line manually registered Windows apps; they also need a stable index.
+for (const m of extra.matchAll(/apps\.push\(\{([^\n]*)\}\);/g)) {
+  const obj = m[1];
+  const pkg = /pkg:\{windows:'([^']+)'/.exec(obj);
+  if (!pkg) continue;
+  const name = /\bname:'([^']+)'/.exec(obj);
+  const index = /\bwinIndex:\s*(\d+)/.exec(obj);
+  if (!name || !index) throw new Error('Windows app has no stable winIndex: ' + obj.slice(0, 120));
+  entries.push({ index: Number(index[1]), name: name[1], pkg: pkg[1] });
+}
+
 const compiled = [...installer.matchAll(/\bA\((\d+),"([^"]+)","([^"]+)"\)/g)]
   .map(m => ({ index: Number(m[1]), name: m[2], pkg: m[3] }));
 
@@ -48,7 +59,7 @@ for (const [id, item] of exe) {
 }
 if (!downloader.includes('new Uint8Array(21)')) errors.push('Unexpected Windows bitset layout');
 for (const id of web.keys()) if (id < 0 || id > 167) errors.push('Windows index outside bitset: ' + id);
-if (entries.length < 160) errors.push('Web catalog unexpectedly small: ' + entries.length);
+if (entries.length < 163) errors.push('Web catalog unexpectedly small: ' + entries.length);
 
 if (errors.length) {
   console.error('AppForge Windows catalog FAILED:\n' + errors.join('\n'));
