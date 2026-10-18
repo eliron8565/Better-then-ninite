@@ -136,12 +136,12 @@ A(0,"Google Chrome","Google.Chrome"),A(1,"Mozilla Firefox","Mozilla.Firefox"),A(
                         }
                         Set(a,0,"Downloading update…",cyan);
                         int code=await Winget(a,"upgrade",cts.Token);
-                        if(code==0){Set(a,100,"OK — updated",green);ok++;}
+                        if(code==0){await VerifyPackagePresent(a);Set(a,100,"OK — updated & verified",green);ok++;WriteLog($"{a.Name}: update command succeeded, package verified present ({a.PackageId})");}
                         else throw new Exception($"Winget upgrade failed: exit code {code}");
                     }else{
                         Set(a,0,"Downloading…",cyan);
                         int code=await Winget(a,"install",cts.Token);
-                        if(code==0){Set(a,100,"OK — installed (Winget)",green);ok++;}
+                        if(code==0){await VerifyPackagePresent(a);Set(a,100,"OK — installed & verified",green);ok++;WriteLog($"{a.Name}: installed and verified ({a.PackageId})");}
                         else throw new Exception($"Winget installation failed: exit code {code}");
                     }
                 }
@@ -153,6 +153,16 @@ A(0,"Google Chrome","Google.Chrome"),A(1,"Mozilla Firefox","Mozilla.Firefox"),A(
         headline.Text=cts.IsCancellationRequested?"Installation cancelled":failed>0?"Finished with errors":manual>0?"Finished — manual steps remain":"All done";
         status.Text=$"{ok} installed/updated • {skipped} up to date • {manual} manual setup • {failed} failed";
         WriteLog(status.Text);
+    }
+    static async Task VerifyPackagePresent(AppItem a){
+        string output="";
+        for(int attempt=0;attempt<3;attempt++){
+            var listed=await Capture("winget",$"list --id \"{PackageCode(a)}\" -e{PackageSource(a)} --accept-source-agreements --disable-interactivity");
+            output=listed.Output;
+            if(listed.ExitCode==0 && LooksInstalled(listed.Output,PackageCode(a)))return;
+            if(attempt<2)await Task.Delay(1500);
+        }
+        throw new Exception("WinGet finished but the package could not be verified in the installed list: "+TrimError(output));
     }
     async Task<int> Winget(AppItem a,string verb,CancellationToken token){var psi=new ProcessStartInfo("winget",WingetArgs(a,verb)){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true,StandardOutputEncoding=Encoding.UTF8,StandardErrorEncoding=Encoding.UTF8};using var p=new Process{StartInfo=psi};active=p;p.Start();var o=ReadProgress(p.StandardOutput,a,token);var e=ReadProgress(p.StandardError,a,token);await p.WaitForExitAsync(token);await Task.WhenAll(o,e);return p.ExitCode;}
     async Task ReadProgress(StreamReader r,AppItem a,CancellationToken t){while(!r.EndOfStream&&!t.IsCancellationRequested){var x=await r.ReadLineAsync(t);if(string.IsNullOrWhiteSpace(x))continue;var m=PercentRx.Match(x);if(m.Success&&int.TryParse(m.Groups[1].Value,out var n))BeginInvoke(()=>Set(a,n,$"Downloading {n}%",cyan));else if(x.Contains("Installing",StringComparison.OrdinalIgnoreCase))BeginInvoke(()=>Set(a,Math.Max(5,progress[a.Index].Value),"Installing…",cyan));}}
@@ -166,7 +176,7 @@ A(0,"Google Chrome","Google.Chrome"),A(1,"Mozilla Firefox","Mozilla.Firefox"),A(
     }
     static bool NoInstalledMatch(string s)=>s.Contains("No installed package found",StringComparison.OrdinalIgnoreCase)||s.Contains("No package found",StringComparison.OrdinalIgnoreCase);
     static bool NoUpgrade(string s)=>s.Contains("No applicable upgrade found",StringComparison.OrdinalIgnoreCase)||s.Contains("No available upgrade found",StringComparison.OrdinalIgnoreCase)||s.Contains("No installed package found",StringComparison.OrdinalIgnoreCase);
-    static bool HasPackageRow(string s,string id)=>s.Split('\n').Any(row=>row.Contains(id,StringComparison.OrdinalIgnoreCase));
+    static bool HasPackageRow(string s,string id)=>s.Split('\n').Any(row=>Regex.IsMatch(row,@"(?<!\S)"+Regex.Escape(id)+@"(?!\S)",RegexOptions.IgnoreCase));
     static bool LooksInstalled(string s,string id)=>!NoInstalledMatch(s)&&HasPackageRow(s,id);
     static bool HasUpgrade(string s,string id)=>!NoUpgrade(s)&&HasPackageRow(s,id);
     static string TrimError(string text)=>text.Length<=300?text.Trim():text[^300..].Trim();
