@@ -66,6 +66,7 @@ internal static class SelectionManifest
             {
                 if (entry.ValueKind != JsonValueKind.Object ||
                     !entry.TryGetProperty("index", out var indexProp) ||
+                    indexProp.ValueKind != JsonValueKind.Number ||
                     !indexProp.TryGetInt32(out var id) ||
                     !known.TryGetValue(id, out var app) ||
                     !seen.Add(id) ||
@@ -80,7 +81,7 @@ internal static class SelectionManifest
             }
             return new(true, true, selected, "");
         }
-        catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException or ArgumentException)
+        catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException)
         {
             return Fail("unreadable or malformed setup file (" + ex.GetType().Name + ").");
         }
