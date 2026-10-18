@@ -16,10 +16,15 @@
   }
   function windowsName(chosen){return `AppForge-${windowsSelectionToken(chosen)}.exe`}
 
-  function downloadWindows(chosen){
-    // Same-origin download keeps the personalized filename without loading/mutating a 70MB EXE in browser memory.
+  async function downloadWindows(chosen){
+    // Verify the actual site asset before starting a personalized same-origin download.
+    const url=`downloads/AppForge-Windows.exe?v=${Date.now()}`;
+    const check=await fetch(url,{method:'HEAD',cache:'no-store'});
+    if(!check.ok)throw new Error(`Windows EXE is unavailable (${check.status}). Try again after the GitHub Pages build finishes.`);
+    const bytes=Number(check.headers.get('content-length')||0);
+    if(bytes && bytes < 10*1024*1024)throw new Error('Windows EXE is incomplete; please wait for the updated release.');
     const a=document.createElement('a');
-    a.href=`downloads/AppForge-Windows.exe?v=${Date.now()}`;
+    a.href=url;
     a.download=windowsName(chosen);
     document.body.appendChild(a);a.click();a.remove();
   }
@@ -148,6 +153,6 @@
     refresh();
   }
   function wireCommand(){wireLinuxExport();const mgr=document.querySelector('#linuxPackageManager');if(mgr&&!mgr.dataset.wired){mgr.dataset.wired='1';mgr.addEventListener('change',refreshCommand);}const copy=document.querySelector('#copyInstallCommand');if(copy&&!copy.dataset.wired){copy.dataset.wired='1';copy.addEventListener('click',async()=>{refreshCommand();const text=document.querySelector('#installCommand')?.textContent||'';if(!text||text.startsWith('No compatible'))return;try{await navigator.clipboard.writeText(text);const old=copy.textContent;copy.textContent='✓ Copied';setTimeout(()=>copy.textContent=old,1600)}catch{alert('Could not copy automatically.')}})}const review=document.querySelector('#reviewButton');if(review&&!review.dataset.commandWired){review.dataset.commandWired='1';review.addEventListener('click',()=>setTimeout(refreshCommand,0))}}
-  function wire(){const old=document.querySelector('#downloadScript');if(!old||old.dataset.nativeDownload==='1'){wireCommand();return}const button=old.cloneNode(true);button.dataset.nativeDownload='1';old.replaceWith(button);button.addEventListener('click',async()=>{const chosen=availableApps().filter(a=>selected.has(a.key));if(!chosen.length)return;const oldText=button.textContent;button.disabled=true;button.textContent=platform==='windows'?'Downloading AppForge…':'Preparing AppForge…';try{if(platform==='windows')downloadWindows(chosen);else if(platform==='linux')await downloadLinux(chosen);else await downloadMac(chosen)}catch(e){alert(`AppForge: ${e.message}`)}finally{button.disabled=false;button.textContent=oldText}});wireCommand()}
+  function wire(){const old=document.querySelector('#downloadScript');if(!old||old.dataset.nativeDownload==='1'){wireCommand();return}const button=old.cloneNode(true);button.dataset.nativeDownload='1';old.replaceWith(button);button.addEventListener('click',async()=>{const chosen=availableApps().filter(a=>selected.has(a.key));if(!chosen.length)return;const oldText=button.textContent;button.disabled=true;button.textContent=platform==='windows'?'Downloading AppForge…':'Preparing AppForge…';try{if(platform==='windows')await downloadWindows(chosen);else if(platform==='linux')await downloadLinux(chosen);else await downloadMac(chosen)}catch(e){alert(`AppForge: ${e.message}`)}finally{button.disabled=false;button.textContent=oldText}});wireCommand()}
   wire();
 })();
