@@ -1,0 +1,41 @@
+name: Test AppForge Website
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'setup-studio.js'
+      - 'setup-studio.css'
+      - 'scripts/test-setup-studio.cjs'
+      - 'app.js'
+      - 'extra-apps.js'
+      - 'index.html'
+      - '.github/workflows/test-website.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate JavaScript syntax
+        run: |
+          node --check app.js
+          node --check extra-apps.js
+          node --check enhancements.js
+          node --check download-fix.js
+          node --check setup-studio.js
+      - name: Test setup profiles and package commands
+        run: node scripts/test-setup-studio.cjs
+      - name: Check Windows catalog stays consistent
+        run: node scripts/validate-windows-catalog.cjs
+      - name: Verify Studio loads on homepage
+        run: |
+          grep -q 'setup-studio.js' index.html
+          grep -q 'setup-studio.css' index.html
