@@ -89,6 +89,14 @@ jobs:
           $p=Start-Process -FilePath $exe -ArgumentList '--self-test' -Wait -PassThru
           if($p.ExitCode -ne 0){throw "AppForge runtime self-test failed: exit $($p.ExitCode)"}
 
+      - name: Launch simple installer GUI on Windows without installing apps
+        shell: pwsh
+        run: |
+          $exe=(Resolve-Path 'publish/AppForge.exe').Path
+          $p=Start-Process -FilePath $exe -ArgumentList '--ui-smoke' -Wait -PassThru
+          if($p.ExitCode -ne 0){throw "Simple installer GUI test failed: exit $($p.ExitCode)"}
+          Write-Host 'Simple installer UI opened, checked selected/manual rows, and closed successfully.'
+
       - name: Verify personalized EXE decodes selected apps without installing
         shell: pwsh
         run: |
