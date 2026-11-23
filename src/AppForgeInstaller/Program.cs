@@ -7,14 +7,14 @@ namespace AppForgeInstaller;
 
 internal static class Program
 {
-    [STAThread] static int Main(string[] args) { if(args.Length==1 && args[0]=="--self-test") return MainForm.SelfTest(); if(args.Length==1 && args[0]=="--real-install-smoke")return MainForm.RealInstallSmoke().GetAwaiter().GetResult(); if(args.Length==1 && args[0].StartsWith("--verify-selection=",StringComparison.Ordinal))return MainForm.VerifySelection(args[0]["--verify-selection=".Length..]); ApplicationConfiguration.Initialize(); Application.Run(new MainForm()); return 0; }
+    [STAThread] static int Main(string[] args) { if(args.Length==1 && args[0]=="--self-test") return MainForm.SelfTest(); if(args.Length==1 && args[0]=="--ui-smoke") return MainForm.UiSmoke(); if(args.Length==1 && args[0]=="--real-install-smoke")return MainForm.RealInstallSmoke().GetAwaiter().GetResult(); if(args.Length==1 && args[0].StartsWith("--verify-selection=",StringComparison.Ordinal))return MainForm.VerifySelection(args[0]["--verify-selection=".Length..]); ApplicationConfiguration.Initialize(); Application.Run(new MainForm()); return 0; }
 }
 
 internal sealed record AppItem(int Index, string Name, string PackageId);
 
 internal sealed class MainForm : Form
 {
-    readonly Color bg=Color.FromArgb(8,15,27), panel=Color.FromArgb(15,27,44), line=Color.FromArgb(38,55,77), text=Color.FromArgb(240,246,252), muted=Color.FromArgb(145,164,186), cyan=Color.FromArgb(74,210,255), green=Color.FromArgb(91,220,157), yellow=Color.FromArgb(244,190,75), red=Color.FromArgb(255,105,120);
+    readonly Color bg=Color.FromArgb(248,250,253), panel=Color.White, line=Color.FromArgb(223,231,241), text=Color.FromArgb(31,42,56), muted=Color.FromArgb(96,112,132), cyan=Color.FromArgb(40,111,220), green=Color.FromArgb(28,137,86), yellow=Color.FromArgb(170,100,24), red=Color.FromArgb(188,52,62);
     readonly ProgressBar overall=new(); readonly Label headline=new(), status=new(), count=new(); readonly TableLayoutPanel rows=new(); readonly Button details=new(), cancel=new(), retry=new(), close=new();
     readonly Dictionary<int,Label> state=new(); readonly Dictionary<int,ProgressBar> progress=new(); readonly Dictionary<int,string> errors=new();
     readonly List<AppItem> selected; CancellationTokenSource? cts; Process? active; bool detailsVisible=true;
@@ -41,23 +41,143 @@ A(0,"Google Chrome","Google.Chrome"),A(1,"Mozilla Firefox","Mozilla.Firefox"),A(
         return expected.Count>0 && ReadSelection().Select(x=>x.Index).ToHashSet().SetEquals(expected) ? 0 : 21;
     }
 
-    public MainForm(){selected=ReadSelection(); base.Text="AppForge";StartPosition=FormStartPosition.CenterScreen;Size=new Size(760,620);MinimumSize=new Size(680,500);BackColor=bg;ForeColor=text;Font=new Font("Segoe UI",10);try{Icon=Icon.ExtractAssociatedIcon(Application.ExecutablePath);}catch{} BuildUi();Shown+=async(_,_)=>await StartAutomatically();}
+    public static int UiSmoke(){
+        ApplicationConfiguration.Initialize();
+        using var form=new MainForm(uiSmoke:true);
+        if(form.selected.Count!=3 || form.rows.Controls.Count<9 ||
+           form.cancel.Text!="Cancel" || form.close.Text!="Close" ||
+           !form.state.ContainsKey(44) || form.state[44] is not LinkLabel)return 71;
+        Application.Run(form);
+        return 0;
+    }
+
+    public MainForm(bool uiSmoke=false){
+        selected=uiSmoke ? Catalog.Where(a=>a.Index is 0 or 44 or 158).ToList() : ReadSelection();
+        base.Text="AppForge — Easy App Installer";
+        StartPosition=FormStartPosition.CenterScreen;Size=new Size(660,540);
+        MinimumSize=new Size(570,440);BackColor=bg;ForeColor=text;
+        Font=new Font("Segoe UI",10);AutoScaleMode=AutoScaleMode.Dpi;
+        try{Icon=Icon.ExtractAssociatedIcon(Application.ExecutablePath);}catch{}
+        BuildUi();
+        Shown+=async(_,_)=>{
+            if(uiSmoke){BeginInvoke((Action)(()=>Close()));return;}
+            await StartAutomatically();
+        };
+    }
 
     void BuildUi(){
-        var root=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(24),RowCount=6,ColumnCount=1,BackColor=bg};root.RowStyles.Add(new RowStyle(SizeType.AutoSize));root.RowStyles.Add(new RowStyle(SizeType.AutoSize));root.RowStyles.Add(new RowStyle(SizeType.AutoSize));root.RowStyles.Add(new RowStyle(SizeType.Percent,100));root.RowStyles.Add(new RowStyle(SizeType.AutoSize));root.RowStyles.Add(new RowStyle(SizeType.AutoSize));Controls.Add(root);
-        var brand=new Label{AutoSize=true,Text="APPFORGE",ForeColor=cyan,Font=new Font("Segoe UI",11,FontStyle.Bold),Margin=new Padding(0,0,0,5)};root.Controls.Add(brand);
-        headline.AutoSize=true;headline.Text=selected.Count>0?"Installing and updating your apps":"No app selection found";headline.ForeColor=text;headline.Font=new Font("Segoe UI",22,FontStyle.Bold);headline.Margin=new Padding(0,0,0,4);root.Controls.Add(headline);
-        status.AutoSize=true;status.Text=!string.IsNullOrEmpty(SelectionWarning)?SelectionWarning:selected.Count>0?"No toolbars. No extra clicks. AppForge handles your selected apps automatically.":"Choose apps on the AppForge website and download a fresh installer.";status.ForeColor=!string.IsNullOrEmpty(SelectionWarning)?red:muted;status.Margin=new Padding(0,0,0,18);root.Controls.Add(status);
-        if (!string.IsNullOrEmpty(SelectionWarning)) headline.Text="Setup manifest needs attention";
-        var host=new Panel{Dock=DockStyle.Fill,BackColor=panel,Padding=new Padding(1),Margin=new Padding(0,0,0,16)};rows.Dock=DockStyle.Fill;rows.AutoScroll=true;rows.BackColor=panel;rows.ColumnCount=3;rows.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,43));rows.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,37));rows.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,20));host.Controls.Add(rows);root.Controls.Add(host);
+        var root=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(22,18,22,17),
+            RowCount=6,ColumnCount=1,BackColor=bg};
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute,30));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute,52));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute,52));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent,100));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute,45));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute,55));
+        Controls.Add(root);
+
+        var brand=new Label{AutoSize=true,Text="AppForge  •  Simple setup",
+            ForeColor=cyan,Font=new Font("Segoe UI",10,FontStyle.Bold),Margin=new Padding(0,1,0,0)};
+        root.Controls.Add(brand,0,0);
+
+        headline.AutoSize=false;headline.Dock=DockStyle.Fill;
+        headline.Text=selected.Count>0?"Installing your apps":"No apps selected";
+        if(!string.IsNullOrEmpty(SelectionWarning))headline.Text="Setup file needs attention";
+        headline.ForeColor=text;headline.Font=new Font("Segoe UI",21,FontStyle.Bold);
+        headline.Margin=new Padding(0,0,0,0);
+        root.Controls.Add(headline,0,1);
+
+        status.AutoSize=false;status.Dock=DockStyle.Fill;
+        status.Text=!string.IsNullOrEmpty(SelectionWarning)
+            ?SelectionWarning
+            :selected.Count>0
+                ?$"{selected.Count} apps selected. Keep this window open; AppForge handles them one by one."
+                :"Choose apps at the AppForge website and download your personalized installer.";
+        status.ForeColor=!string.IsNullOrEmpty(SelectionWarning)?red:muted;
+        status.Margin=new Padding(0,0,0,4);
+        root.Controls.Add(status,0,2);
+
+        var host=new Panel{Dock=DockStyle.Fill,BackColor=panel,
+            Padding=new Padding(1),Margin=new Padding(0,0,0,8),BorderStyle=BorderStyle.FixedSingle};
+        rows.Dock=DockStyle.Fill;rows.AutoScroll=true;rows.BackColor=panel;
+        rows.ColumnCount=3;
+        rows.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,42));
+        rows.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,38));
+        rows.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,20));
+        host.Controls.Add(rows);root.Controls.Add(host,0,3);
         AddHeader();foreach(var a in selected)AddRow(a);
-        var prog=new TableLayoutPanel{Dock=DockStyle.Fill,AutoSize=true,ColumnCount=2,Margin=new Padding(0,0,0,14)};prog.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));prog.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));overall.Dock=DockStyle.Fill;overall.Height=20;overall.Maximum=Math.Max(1,selected.Count);count.AutoSize=true;count.Text=$"0 / {selected.Count}";count.ForeColor=muted;count.Margin=new Padding(12,0,0,0);prog.Controls.Add(overall,0,0);prog.Controls.Add(count,1,0);root.Controls.Add(prog);
-        var buttons=new FlowLayoutPanel{Dock=DockStyle.Fill,AutoSize=true,FlowDirection=FlowDirection.RightToLeft};Style(cancel,"Cancel");Style(details,"Hide details");Style(retry,"Retry failed");Style(close,"Close");retry.Visible=false;close.Visible=false;cancel.Click+=(_,_)=>{cts?.Cancel();try{active?.Kill(true);}catch{}};details.Click+=(_,_)=>ToggleDetails();retry.Click+=async(_,_)=>await RunAsync(true);close.Click+=(_,_)=>Close();buttons.Controls.AddRange([cancel,details,retry,close]);root.Controls.Add(buttons);
+
+        var progressRow=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=2,RowCount=1,
+            Margin=new Padding(0,5,0,8)};
+        progressRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));
+        progressRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,105));
+        overall.Dock=DockStyle.Fill;overall.Height=16;overall.Style=ProgressBarStyle.Continuous;
+        overall.Maximum=Math.Max(1,selected.Count);
+        count.AutoSize=false;count.Dock=DockStyle.Fill;count.TextAlign=ContentAlignment.MiddleRight;
+        count.Text=$"0 / {selected.Count}";count.ForeColor=muted;
+        progressRow.Controls.Add(overall,0,0);progressRow.Controls.Add(count,1,0);
+        root.Controls.Add(progressRow,0,4);
+
+        var buttons=new FlowLayoutPanel{Dock=DockStyle.Fill,AutoSize=false,
+            FlowDirection=FlowDirection.RightToLeft,WrapContents=false,Margin=new Padding(0,3,0,0)};
+        Style(cancel,"Cancel");Style(details,"Hide details");
+        Style(retry,"Retry failed");Style(close,"Close");
+        retry.Visible=false;close.Visible=selected.Count==0;cancel.Visible=selected.Count>0;
+        cancel.Click+=(_,_)=>{cts?.Cancel();try{active?.Kill(true);}catch{}};
+        details.Click+=(_,_)=>ToggleDetails();
+        retry.Click+=async(_,_)=>await RunAsync(true);
+        close.Click+=(_,_)=>Close();
+        buttons.Controls.AddRange([close,retry,cancel,details]);
+        root.Controls.Add(buttons,0,5);
     }
-    void AddHeader(){rows.RowCount=1;rows.RowStyles.Add(new RowStyle(SizeType.AutoSize));foreach(var (t,c) in new[]{("Application",0),("Status",1),("Progress",2)}){var l=new Label{Text=t,Dock=DockStyle.Fill,Height=34,ForeColor=muted,Font=new Font("Segoe UI",9,FontStyle.Bold),Padding=new Padding(10,8,4,4)};rows.Controls.Add(l,c,0);}}
-    void AddRow(AppItem a){int r=rows.RowCount++;rows.RowStyles.Add(new RowStyle(SizeType.Absolute,44));var n=new Label{Text=a.Name,Dock=DockStyle.Fill,ForeColor=text,Padding=new Padding(10,12,4,4)};var s=new Label{Text="Waiting",Dock=DockStyle.Fill,ForeColor=muted,Padding=new Padding(6,12,4,4)};var p=new ProgressBar{Dock=DockStyle.Fill,Margin=new Padding(8,12,12,12),Maximum=100};state[a.Index]=s;progress[a.Index]=p;rows.Controls.Add(n,0,r);rows.Controls.Add(s,1,r);rows.Controls.Add(p,2,r);}
-    void Style(Button b,string t){b.Text=t;b.AutoSize=true;b.Padding=new Padding(13,6,13,6);b.FlatStyle=FlatStyle.Flat;b.FlatAppearance.BorderColor=line;b.BackColor=panel;b.ForeColor=text;b.Margin=new Padding(8,0,0,0);}
-    void ToggleDetails(){detailsVisible=!detailsVisible;rows.Parent!.Visible=detailsVisible;details.Text=detailsVisible?"Hide details":"Show details";}
+
+    void AddHeader(){
+        rows.RowCount=1;rows.RowStyles.Add(new RowStyle(SizeType.Absolute,36));
+        foreach(var (label,column) in new[]{("Application",0),("Status",1),("Progress",2)}){
+            var l=new Label{Text=label,Dock=DockStyle.Fill,ForeColor=muted,
+                Font=new Font("Segoe UI",9,FontStyle.Bold),Padding=new Padding(10,9,4,4)};
+            rows.Controls.Add(l,column,0);
+        }
+    }
+
+    void AddRow(AppItem a){
+        var index=rows.RowCount++;
+        rows.RowStyles.Add(new RowStyle(SizeType.Absolute,44));
+        var name=new Label{Text=a.Name,Dock=DockStyle.Fill,ForeColor=text,
+            AutoEllipsis=true,Padding=new Padding(10,11,4,4)};
+        Label label;
+        if(a.PackageId.StartsWith("url:https://",StringComparison.OrdinalIgnoreCase)){
+            var linkLabel=new LinkLabel{Text="Manual download ↗",Dock=DockStyle.Fill,LinkColor=yellow,
+                ActiveLinkColor=cyan,VisitedLinkColor=yellow,
+                AutoEllipsis=true,Padding=new Padding(5,11,4,4),
+                AccessibleDescription="Open the official website for manual installation"};
+            linkLabel.LinkClicked+=(_,_)=>{
+                try{Process.Start(new ProcessStartInfo(a.PackageId[4..]){UseShellExecute=true});}
+                catch(Exception ex){MessageBox.Show(this,"Could not open official download page: "+ex.Message,
+                    "AppForge",MessageBoxButtons.OK,MessageBoxIcon.Warning);}
+            };
+            label=linkLabel;
+        }else{
+            label=new Label{Text="Waiting",Dock=DockStyle.Fill,ForeColor=muted,
+                AutoEllipsis=true,Padding=new Padding(5,11,4,4)};
+        }
+        var bar=new ProgressBar{Dock=DockStyle.Fill,Margin=new Padding(8,13,12,13),Maximum=100};
+        state[a.Index]=label;progress[a.Index]=bar;
+        rows.Controls.Add(name,0,index);rows.Controls.Add(label,1,index);rows.Controls.Add(bar,2,index);
+    }
+
+    void Style(Button button,string caption){
+        button.Text=caption;button.AutoSize=true;button.Padding=new Padding(9,5,9,5);
+        button.FlatStyle=FlatStyle.Flat;button.FlatAppearance.BorderColor=line;
+        button.BackColor=panel;button.ForeColor=text;button.Margin=new Padding(7,0,0,0);
+        button.Cursor=Cursors.Hand;
+    }
+
+    void ToggleDetails(){
+        detailsVisible=!detailsVisible;
+        rows.Parent!.Visible=detailsVisible;
+        details.Text=detailsVisible?"Hide details":"Show details";
+    }
 
     async Task StartAutomatically(){if(selected.Count==0){cancel.Visible=false;return;}await RunAsync(false);}
     // Requires a disposable CI VM and explicit opt-in. Exercise real Winget and verify its result.
@@ -117,9 +237,7 @@ A(0,"Google Chrome","Google.Chrome"),A(1,"Mozilla Firefox","Mozilla.Firefox"),A(
             if(cts.IsCancellationRequested)break;
             try{
                 if(a.PackageId.StartsWith("url:",StringComparison.OrdinalIgnoreCase)){
-                    Set(a,0,"Manual setup — opening vendor page",yellow);
-                    Process.Start(new ProcessStartInfo(a.PackageId[4..]){UseShellExecute=true});
-                    Set(a,0,"Manual installation required",yellow);
+                    Set(a,0,"Manual download ↗",yellow);
                     manual++;
                 }else{
                     if(wingetError!=null)throw new InvalidOperationException(wingetError);
@@ -151,8 +269,8 @@ A(0,"Google Chrome","Google.Chrome"),A(1,"Mozilla Firefox","Mozilla.Firefox"),A(
             Next: done++;overall.Value=Math.Min(overall.Maximum,done);count.Text=$"{done} / {targets.Count}";
         }
         cancel.Visible=false;retry.Visible=failed>0;close.Visible=true;
-        headline.Text=cts.IsCancellationRequested?"Installation cancelled":failed>0?"Finished with errors":manual>0?"Finished — manual steps remain":"All done";
-        status.Text=$"{ok} installed/updated • {skipped} up to date • {manual} manual setup • {failed} failed";
+        headline.Text=cts.IsCancellationRequested?"Cancelled":failed>0?"Some apps need attention":manual>0?"Automatic installs finished":"All done!";
+        status.Text=$"{ok} installed/updated  •  {skipped} already up to date  •  {manual} manual links  •  {failed} failed"+(manual>0?"  ·  Click the orange links to finish those apps.":"");
         WriteLog(status.Text);
     }
     static async Task VerifyPackagePresent(AppItem a){
@@ -167,7 +285,7 @@ A(0,"Google Chrome","Google.Chrome"),A(1,"Mozilla Firefox","Mozilla.Firefox"),A(
     }
     async Task<int> Winget(AppItem a,string verb,CancellationToken token){var psi=new ProcessStartInfo("winget",WingetArgs(a,verb)){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true,StandardOutputEncoding=Encoding.UTF8,StandardErrorEncoding=Encoding.UTF8};using var p=new Process{StartInfo=psi};active=p;p.Start();var o=ReadProgress(p.StandardOutput,a,token);var e=ReadProgress(p.StandardError,a,token);await p.WaitForExitAsync(token);await Task.WhenAll(o,e);return p.ExitCode;}
     async Task ReadProgress(StreamReader r,AppItem a,CancellationToken t){while(!r.EndOfStream&&!t.IsCancellationRequested){var x=await r.ReadLineAsync(t);if(string.IsNullOrWhiteSpace(x))continue;var m=PercentRx.Match(x);if(m.Success&&int.TryParse(m.Groups[1].Value,out var n))BeginInvoke(()=>Set(a,n,$"Downloading {n}%",cyan));else if(x.Contains("Installing",StringComparison.OrdinalIgnoreCase))BeginInvoke(()=>Set(a,Math.Max(5,progress[a.Index].Value),"Installing…",cyan));}}
-    void Set(AppItem a,int pct,string t,Color c){if(progress.TryGetValue(a.Index,out var p))p.Value=Math.Clamp(pct,0,100);if(state.TryGetValue(a.Index,out var s)){s.Text=t;s.ForeColor=c;}status.Text=$"{a.Name} — {t}";}
+    void Set(AppItem a,int pct,string t,Color c){if(progress.TryGetValue(a.Index,out var p))p.Value=Math.Clamp(pct,0,100);if(state.TryGetValue(a.Index,out var itemStatus)){itemStatus.Text=t;itemStatus.ForeColor=c;if(itemStatus is LinkLabel link)link.LinkColor=c;}status.Text=$"{a.Name} — {t}";}
     static async Task<(int ExitCode,string Output)> Capture(string f,string args){
         var psi=new ProcessStartInfo(f,args){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true};
         using var p=Process.Start(psi)??throw new Exception("Windows Package Manager could not start.");
